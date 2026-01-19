@@ -35,6 +35,7 @@
         .scan-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;margin-bottom:10px}
         .scan-btn:active{transform:scale(.98)}
         .scan-btn.scanning{background:var(--orange);animation:pulse 1.5s infinite}
+        .scan-btn.photo-btn{background:#6c5ce7}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
         .camera-container{display:none;background:#000;border-radius:12px;overflow:hidden;margin-bottom:12px;position:relative}
         .camera-container video{width:100%;max-height:300px;object-fit:cover}
@@ -94,6 +95,11 @@
         .scanned-preview{background:#f0f7ff;border:2px solid var(--blue);border-radius:8px;padding:12px;margin:10px 0}
         .scanned-preview h4{color:var(--blue);margin-bottom:8px;font-size:.9em}
         .scanned-preview p{font-size:.85em;margin:4px 0}
+        .photo-preview{max-width:100%;border-radius:8px;margin:10px 0;border:2px solid var(--green)}
+        .photo-gallery{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+        .photo-gallery img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #ddd}
+        .ipad-tip{background:#fff3cd;border:2px solid #ffc107;border-radius:8px;padding:12px;margin:15px 0;font-size:.85em}
+        .ipad-tip strong{color:#856404;display:block;margin-bottom:5px}
         @media(max-width:500px){.outcome-buttons,.form-row{grid-template-columns:1fr}.ewp-type-grid{grid-template-columns:repeat(2,1fr)}}
     </style>
 </head>
@@ -117,15 +123,17 @@
             <div class="card">
                 <h2>Candidate Details</h2>
                 <button class="scan-btn" id="scan-id-btn" onclick="startCamera('id')">Scan Driver Licence</button>
+                <button class="scan-btn photo-btn" id="photo-id-btn" onclick="takePhoto('id')">Take Photo of Licence</button>
                 <div class="camera-container" id="camera-id">
                     <video id="video-id" autoplay playsinline></video>
                     <canvas id="canvas-id"></canvas>
                     <div class="camera-overlay"></div>
-                    <div class="camera-instructions">Position licence within the frame</div>
-                    <button class="capture-btn" onclick="captureAndScan('id')">Capture</button>
+                    <div class="camera-instructions" id="camera-instructions-id">Position licence within the frame</div>
+                    <button class="capture-btn" id="capture-id-btn" onclick="captureAndScan('id')">Capture</button>
                 </div>
                 <div id="ocr-status-id" class="ocr-status" style="display:none"></div>
                 <div id="scanned-preview-id" class="scanned-preview" style="display:none"></div>
+                <div id="photo-gallery-id" class="photo-gallery"></div>
                 <div class="divider">or enter manually</div>
                 <div class="form-group"><label>Full Name *</label><input type="text" id="candidate-name" placeholder="Enter full name"></div>
                 <div class="form-row">
@@ -148,15 +156,17 @@
                 <h2>Verify HRW Licence</h2>
                 <div class="info-banner"><strong id="step2-name">Candidate</strong><span>Verify current HRW Licence</span></div>
                 <button class="scan-btn" id="scan-hrwl-btn" onclick="startCamera('hrwl')">Scan HRWL Card</button>
+                <button class="scan-btn photo-btn" id="photo-hrwl-btn" onclick="takePhoto('hrwl')">Take Photo of HRWL</button>
                 <div class="camera-container" id="camera-hrwl">
                     <video id="video-hrwl" autoplay playsinline></video>
                     <canvas id="canvas-hrwl"></canvas>
                     <div class="camera-overlay"></div>
-                    <div class="camera-instructions">Position HRWL card within the frame</div>
-                    <button class="capture-btn" onclick="captureAndScan('hrwl')">Capture</button>
+                    <div class="camera-instructions" id="camera-instructions-hrwl">Position HRWL card within the frame</div>
+                    <button class="capture-btn" id="capture-hrwl-btn" onclick="captureAndScan('hrwl')">Capture</button>
                 </div>
                 <div id="ocr-status-hrwl" class="ocr-status" style="display:none"></div>
                 <div id="scanned-preview-hrwl" class="scanned-preview" style="display:none"></div>
+                <div id="photo-gallery-hrwl" class="photo-gallery"></div>
                 <div class="divider">or enter manually</div>
                 <div class="form-row">
                     <div class="form-group"><label>HRWL Number *</label><input type="text" id="hrwl-number" placeholder="Licence number"></div>
@@ -206,13 +216,38 @@
                     <div class="form-group"><label id="equipment-label">Plant/Equipment Make</label><input type="text" id="machine-make" placeholder="e.g., Franna, JLG, Toyota"></div>
                     <div class="form-group"><label>Model</label><input type="text" id="machine-model" placeholder="e.g., AT-20, 450AJ"></div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group"><label>Assessor *</label>
-                        <select id="assessor-select"><option value="Nick Thompson">Nick Thompson</option><option value="Shane McCann">Shane McCann</option></select>
+                <div class="form-group">
+                    <label>Assessor *</label>
+                    <div style="display:flex;gap:8px;">
+                        <select id="assessor-select" style="flex:1;">
+                            <option value="">-- Select Assessor --</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary" onclick="addNewAssessor()" style="padding:10px 15px;white-space:nowrap;">+ Add</button>
                     </div>
-                    <div class="form-group"><label>Date</label><input type="date" id="assessment-date"></div>
                 </div>
+                <div class="form-group"><label>Date</label><input type="date" id="assessment-date"></div>
             </div>
+
+            <!-- Data Plate Photos -->
+            <div class="card">
+                <h2>Data Plate / Serial Number</h2>
+                <p style="font-size:.85em;color:#666;margin-bottom:12px">Photograph equipment data plate showing make, model, serial number, capacity etc.</p>
+                <button class="scan-btn photo-btn" onclick="takeGenericPhoto('dataplate')">Take Data Plate Photo</button>
+                <div id="photo-gallery-dataplate" class="photo-gallery"></div>
+            </div>
+
+            <!-- Miscellaneous Photos -->
+            <div class="card">
+                <h2>Other Photos</h2>
+                <p style="font-size:.85em;color:#666;margin-bottom:12px">Capture any other relevant photos (equipment condition, site setup, load charts, etc.)</p>
+                <button class="scan-btn photo-btn" onclick="takeGenericPhoto('misc')">Take Photo</button>
+                <div class="form-group" style="margin-top:12px">
+                    <label>Photo Notes</label>
+                    <input type="text" id="misc-photo-notes" placeholder="Optional description of photos">
+                </div>
+                <div id="photo-gallery-misc" class="photo-gallery"></div>
+            </div>
+
             <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(2)">Back</button><button class="btn btn-primary" onclick="nextStep(4)">Next</button></div>
         </div>
 
@@ -258,8 +293,9 @@
                 <label style="font-weight:600;font-size:.85em;margin-bottom:8px;display:block">Candidate Signature</label>
                 <div class="signature-container"><canvas id="sig-candidate" class="signature-pad"></canvas></div>
                 <button class="signature-actions" onclick="clearSignature('candidate')">Clear</button>
-                <h3>Assessor Signature</h3>
-                <label style="font-weight:600;font-size:.85em;margin-bottom:8px;display:block">Assessor: <span id="step5-assessor"></span></label>
+                <h3>Director Signature</h3>
+                <label style="font-weight:600;font-size:.85em;margin-bottom:8px;display:block">Shane McCann - Director</label>
+                <p style="font-size:.8em;color:#666;margin-bottom:8px;">Assessor: <span id="step5-assessor"></span></p>
                 <div class="signature-container"><canvas id="sig-assessor" class="signature-pad"></canvas></div>
                 <button class="signature-actions" onclick="clearSignature('assessor')">Clear</button>
             </div>
@@ -270,12 +306,19 @@
         <div class="section" id="step6">
             <div class="success-banner"><h2>VOC COMPLETE</h2><p id="cert-id"></p></div>
 
+            <div class="ipad-tip">
+                <strong>iPad Download Location:</strong>
+                Files save to Files app > On My iPad > Downloads folder.
+                Or tap the download arrow in Safari toolbar to see recent downloads.
+            </div>
+
             <div class="upload-instructions">
                 <h3>Save to SharePoint</h3>
                 <ol>
-                    <li>Tap <strong>"Download Certificate PDF"</strong> below</li>
+                    <li>Tap <strong>"Save Certificate PDF"</strong> below</li>
+                    <li>Choose <strong>"Save to Files"</strong> or it will auto-save</li>
                     <li>Tap <strong>"Open SharePoint Folder"</strong></li>
-                    <li>Tap <strong>Upload</strong> and select the PDF from Downloads</li>
+                    <li>Tap <strong>Upload</strong> and select the PDF</li>
                 </ol>
             </div>
 
@@ -286,16 +329,17 @@
                 <p><strong>Equipment:</strong> <span id="final-machine"></span></p>
                 <p><strong>Date:</strong> <span id="final-date"></span></p>
                 <p><strong>Assessor:</strong> <span id="final-assessor"></span></p>
+                <p><strong>Signed by:</strong> Shane McCann - Director</p>
                 <p><strong>Outcome:</strong> <span id="final-outcome"></span></p>
             </div>
 
-            <button class="btn btn-primary btn-block btn-lg" onclick="downloadCertificate()">1. Download Certificate PDF</button>
+            <button class="btn btn-primary btn-block btn-lg" onclick="saveCertificatePDF()">1. Save Certificate PDF</button>
             <button class="btn btn-blue btn-block btn-lg" style="margin-top:12px" onclick="openSharePoint()">2. Open SharePoint Folder</button>
 
             <div class="divider" style="margin:20px 0">Other Options</div>
 
             <button class="btn btn-success btn-block" onclick="emailToStudent()">Email Certificate to Student</button>
-            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadJSON()">Download Full Assessment Data</button>
+            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadAssessmentData()">Download Assessment Summary</button>
             <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="startNew()">Start New Assessment</button>
         </div>
     </div>
@@ -353,11 +397,49 @@ let sigPadCandidate = null;
 let sigPadAssessor = null;
 let activeStreams = {};
 let selectedEwpType = '';
+let cameraMode = ''; // 'scan' or 'photo'
+let capturedPhotos = { id: [], hrwl: [], dataplate: [], misc: [] };
+
+// Default assessors - stored in localStorage so new ones can be added
+const DEFAULT_ASSESSORS = ['Shane McCann', 'Nick Beashel'];
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('assessment-date').valueAsDate = new Date();
     initSignaturePads();
+    loadAssessors();
 });
+
+function loadAssessors() {
+    let assessors = JSON.parse(localStorage.getItem('vocAssessors'));
+    if (!assessors || assessors.length === 0) {
+        assessors = DEFAULT_ASSESSORS;
+        localStorage.setItem('vocAssessors', JSON.stringify(assessors));
+    }
+    const select = document.getElementById('assessor-select');
+    select.innerHTML = '<option value="">-- Select Assessor --</option>';
+    assessors.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
+}
+
+function addNewAssessor() {
+    const name = prompt('Enter new assessor name:');
+    if (name && name.trim()) {
+        let assessors = JSON.parse(localStorage.getItem('vocAssessors')) || DEFAULT_ASSESSORS;
+        if (!assessors.includes(name.trim())) {
+            assessors.push(name.trim());
+            localStorage.setItem('vocAssessors', JSON.stringify(assessors));
+            loadAssessors();
+            document.getElementById('assessor-select').value = name.trim();
+        } else {
+            alert('Assessor already exists');
+            document.getElementById('assessor-select').value = name.trim();
+        }
+    }
+}
 
 function initSignaturePads() {
     const c1 = document.getElementById('sig-candidate');
@@ -409,10 +491,65 @@ function toggleCheck(btn) {
     btn.classList.add('selected');
 }
 
+// Take photo without OCR
+async function takePhoto(type) {
+    cameraMode = 'photo';
+    const container = document.getElementById('camera-' + type);
+    const video = document.getElementById('video-' + type);
+    const btn = document.getElementById('photo-' + type + '-btn');
+    const instructions = document.getElementById('camera-instructions-' + type);
+    const captureBtn = document.getElementById('capture-' + type + '-btn');
+
+    if (container.style.display === 'block') { stopCamera(type); return; }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
+        video.srcObject = stream;
+        activeStreams[type] = stream;
+        container.style.display = 'block';
+        btn.textContent = 'Close Camera';
+        btn.classList.add('scanning');
+        instructions.textContent = 'Take a photo of the licence';
+        captureBtn.onclick = function() { capturePhoto(type); };
+    } catch (err) {
+        alert('Could not access camera.');
+    }
+}
+
+// Capture photo only (no OCR)
+function capturePhoto(type) {
+    const video = document.getElementById('video-' + type);
+    const canvas = document.getElementById('canvas-' + type);
+    const gallery = document.getElementById('photo-gallery-' + type);
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+    // Store photo
+    capturedPhotos[type].push(imageData);
+
+    // Show in gallery
+    const img = document.createElement('img');
+    img.src = imageData;
+    img.className = 'photo-preview';
+    img.style.width = '80px';
+    img.style.height = '80px';
+    img.style.objectFit = 'cover';
+    gallery.appendChild(img);
+
+    stopCamera(type);
+}
+
 async function startCamera(type) {
+    cameraMode = 'scan';
     const container = document.getElementById('camera-' + type);
     const video = document.getElementById('video-' + type);
     const btn = document.getElementById('scan-' + type + '-btn');
+    const instructions = document.getElementById('camera-instructions-' + type);
+    const captureBtn = document.getElementById('capture-' + type + '-btn');
+
     if (container.style.display === 'block') { stopCamera(type); return; }
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
@@ -421,18 +558,91 @@ async function startCamera(type) {
         container.style.display = 'block';
         btn.textContent = 'Close Camera';
         btn.classList.add('scanning');
+        instructions.textContent = type === 'id' ? 'Position licence within the frame' : 'Position HRWL card within the frame';
+        captureBtn.onclick = function() { captureAndScan(type); };
     } catch (err) { alert('Could not access camera. Please enter details manually.'); }
 }
 
 function stopCamera(type) {
     const container = document.getElementById('camera-' + type);
     const video = document.getElementById('video-' + type);
-    const btn = document.getElementById('scan-' + type + '-btn');
+    const scanBtn = document.getElementById('scan-' + type + '-btn');
+    const photoBtn = document.getElementById('photo-' + type + '-btn');
+
     if (activeStreams[type]) { activeStreams[type].getTracks().forEach(track => track.stop()); delete activeStreams[type]; }
     video.srcObject = null;
     container.style.display = 'none';
-    btn.textContent = type === 'id' ? 'Scan Driver Licence' : 'Scan HRWL Card';
-    btn.classList.remove('scanning');
+    scanBtn.textContent = type === 'id' ? 'Scan Driver Licence' : 'Scan HRWL Card';
+    scanBtn.classList.remove('scanning');
+    photoBtn.textContent = type === 'id' ? 'Take Photo of Licence' : 'Take Photo of HRWL';
+    photoBtn.classList.remove('scanning');
+}
+
+// Generic photo capture for data plates and misc photos (uses modal overlay)
+async function takeGenericPhoto(type) {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.id = 'photo-modal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:9999;display:flex;flex-direction:column;';
+
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.playsInline = true;
+        video.srcObject = stream;
+        video.style.cssText = 'flex:1;object-fit:cover;';
+
+        const btnContainer = document.createElement('div');
+        btnContainer.style.cssText = 'position:absolute;bottom:30px;left:0;right:0;display:flex;justify-content:center;gap:20px;';
+
+        const captureBtn = document.createElement('button');
+        captureBtn.innerHTML = 'Capture';
+        captureBtn.style.cssText = 'width:80px;height:80px;border-radius:50%;background:white;border:4px solid #E87722;font-size:14px;font-weight:bold;cursor:pointer;';
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.style.cssText = 'padding:15px 25px;background:#dc3545;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;';
+
+        captureBtn.onclick = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Store photo
+            capturedPhotos[type].push(imageData);
+
+            // Show in gallery
+            const gallery = document.getElementById('photo-gallery-' + type);
+            const img = document.createElement('img');
+            img.src = imageData;
+            img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #28a745;';
+            gallery.appendChild(img);
+
+            // Close modal
+            stream.getTracks().forEach(track => track.stop());
+            modal.remove();
+        };
+
+        closeBtn.onclick = () => {
+            stream.getTracks().forEach(track => track.stop());
+            modal.remove();
+        };
+
+        btnContainer.appendChild(captureBtn);
+        btnContainer.appendChild(closeBtn);
+        modal.appendChild(video);
+        modal.appendChild(btnContainer);
+        document.body.appendChild(modal);
+
+    } catch (err) {
+        alert('Could not access camera: ' + err.message);
+    }
 }
 
 async function captureAndScan(type) {
@@ -558,15 +768,15 @@ function showStep(step) {
 function validateStep(step) {
     if (step === 1) { if (!document.getElementById('candidate-name').value.trim()) { alert('Enter candidate name'); return false; } if (!document.getElementById('candidate-employer').value.trim()) { alert('Enter employer/company'); return false; } }
     if (step === 2) { if (!document.getElementById('hrwl-number').value.trim()) { alert('Enter HRWL number'); return false; } if (!document.getElementById('chk-hrwl-sighted').checked || !document.getElementById('chk-photo-match').checked) { alert('Confirm HRWL sighted and photo matches'); return false; } }
-    if (step === 3) { if (!document.getElementById('unit-select').value) { alert('Select a VOC type'); return false; } if (document.getElementById('unit-select').value.startsWith('EWP') && !selectedEwpType) { alert('Select EWP type'); return false; } }
+    if (step === 3) { if (!document.getElementById('unit-select').value) { alert('Select a VOC type'); return false; } if (document.getElementById('unit-select').value.startsWith('EWP') && !selectedEwpType) { alert('Select EWP type'); return false; } if (!document.getElementById('assessor-select').value) { alert('Select an assessor'); return false; } }
     if (step === 5) { if (sigPadCandidate.isEmpty()) { alert('Candidate signature required'); return false; } if (sigPadAssessor.isEmpty()) { alert('Assessor signature required'); return false; } }
     return true;
 }
 
 function saveStepData(step) {
-    if (step === 1) { vocData.candidateName = document.getElementById('candidate-name').value.trim(); vocData.candidateId = document.getElementById('candidate-id').value.trim(); vocData.candidateDob = document.getElementById('candidate-dob').value; vocData.candidateAddress = document.getElementById('candidate-address').value.trim(); vocData.employer = document.getElementById('candidate-employer').value.trim(); vocData.phone = document.getElementById('candidate-phone').value.trim(); vocData.email = document.getElementById('candidate-email').value.trim(); }
-    if (step === 2) { vocData.hrwlNumber = document.getElementById('hrwl-number').value.trim(); vocData.hrwlExpiry = document.getElementById('hrwl-expiry').value; vocData.hrwlClasses = document.getElementById('hrwl-classes').value.trim(); }
-    if (step === 3) { const [code, title] = document.getElementById('unit-select').value.split('|'); vocData.unitCode = code; vocData.unitTitle = title; vocData.ewpType = selectedEwpType; vocData.machineMake = document.getElementById('machine-make').value.trim(); vocData.machineModel = document.getElementById('machine-model').value.trim(); vocData.assessor = document.getElementById('assessor-select').value; vocData.assessmentDate = document.getElementById('assessment-date').value; }
+    if (step === 1) { vocData.candidateName = document.getElementById('candidate-name').value.trim(); vocData.candidateId = document.getElementById('candidate-id').value.trim(); vocData.candidateDob = document.getElementById('candidate-dob').value; vocData.candidateAddress = document.getElementById('candidate-address').value.trim(); vocData.employer = document.getElementById('candidate-employer').value.trim(); vocData.phone = document.getElementById('candidate-phone').value.trim(); vocData.email = document.getElementById('candidate-email').value.trim(); vocData.idPhotos = capturedPhotos.id.length; }
+    if (step === 2) { vocData.hrwlNumber = document.getElementById('hrwl-number').value.trim(); vocData.hrwlExpiry = document.getElementById('hrwl-expiry').value; vocData.hrwlClasses = document.getElementById('hrwl-classes').value.trim(); vocData.hrwlPhotos = capturedPhotos.hrwl.length; }
+    if (step === 3) { const [code, title] = document.getElementById('unit-select').value.split('|'); vocData.unitCode = code; vocData.unitTitle = title; vocData.ewpType = selectedEwpType; vocData.machineMake = document.getElementById('machine-make').value.trim(); vocData.machineModel = document.getElementById('machine-model').value.trim(); vocData.assessor = document.getElementById('assessor-select').value; vocData.assessmentDate = document.getElementById('assessment-date').value; vocData.dataPlatePhotos = capturedPhotos.dataplate.length; vocData.miscPhotos = capturedPhotos.misc.length; vocData.miscPhotoNotes = document.getElementById('misc-photo-notes').value.trim(); }
     if (step === 4) {
         vocData.notes = document.getElementById('assessment-notes').value.trim();
         vocData.preassessment = []; document.querySelectorAll('#preassessment-checks .checklist-item').forEach(item => { const sel = item.querySelector('button.selected'); vocData.preassessment.push({ item: item.querySelector('span').textContent, result: sel ? sel.textContent : 'N/A' }); });
@@ -593,47 +803,165 @@ function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     const pw = 210, ph = 297;
-    doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.5); doc.rect(15, 15, pw - 30, ph - 30);
-    let y = 40;
-    doc.setFontSize(28); doc.setFont('helvetica', 'bold');
-    doc.text('STATEMENT OF', pw/2, y, {align:'center'}); y += 12;
-    doc.text('VERIFICATION OF', pw/2, y, {align:'center'}); y += 12;
+
+    // Border
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.rect(15, 15, pw - 30, ph - 30);
+
+    let y = 35;
+
+    // Title - STATEMENT OF VERIFICATION OF COMPETENCY
+    doc.setFontSize(26);
+    doc.setFont('helvetica', 'bold');
+    doc.text('STATEMENT OF', pw/2, y, {align:'center'});
+    y += 10;
+    doc.text('VERIFICATION OF', pw/2, y, {align:'center'});
+    y += 10;
     doc.text('COMPETENCY', pw/2, y, {align:'center'});
-    y += 18; doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+
+    // Description paragraph
+    y += 15;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
     const desc = 'This Statement of Verification of Competency is issued to the candidate identified below, and states that the candidate has undertaken a verification process, including both theoretical and practical assessments to determine that the candidate is competent to operate the machinery, or undertake the process as identified on this Statement. Any Verification of Competency is made on the basis of the performance of the candidate on the day, and at the time of the assessment, by the Assessor.';
-    doc.text(doc.splitTextToSize(desc, pw - 50), pw/2, y, {align:'center'});
-    y += 35; doc.setFillColor(232, 119, 34); doc.ellipse(pw/2, y, 25, 12, 'F');
-    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-    doc.text('EL', pw/2, y + 4, {align:'center'}); doc.setTextColor(0, 0, 0);
-    y += 25; doc.setFontSize(12); doc.setFont('helvetica', 'normal');
+    const descLines = doc.splitTextToSize(desc, pw - 50);
+    doc.text(descLines, pw/2, y, {align:'center'});
+
+    // Elite Licensing Logo - Orange shape with black outline
+    y += 35;
+    const logoX = pw/2;
+    const logoY = y;
+
+    // Draw logo background (orange rounded shape)
+    doc.setFillColor(232, 119, 34);
+    doc.roundedRect(logoX - 25, logoY - 15, 50, 35, 5, 5, 'F');
+
+    // Draw crane hook shape (black)
+    doc.setFillColor(30, 30, 30);
+    doc.setDrawColor(30, 30, 30);
+
+    // Hook curve
+    doc.setLineWidth(3);
+    doc.line(logoX - 5, logoY - 10, logoX - 5, logoY + 5);
+    doc.line(logoX - 5, logoY + 5, logoX + 5, logoY + 10);
+    doc.line(logoX + 5, logoY + 10, logoX + 10, logoY + 5);
+
+    // EL text on logo
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+    doc.text('EL', logoX + 2, logoY + 2, {align:'center'});
+    doc.setTextColor(0, 0, 0);
+
+    // "This is a statement that"
+    y += 30;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
     doc.text('This is a statement that', pw/2, y, {align:'center'});
-    y += 18; doc.setFontSize(32); doc.setFont('times', 'italic');
+
+    // Candidate name in script/italic
+    y += 15;
+    doc.setFontSize(32);
+    doc.setFont('times', 'italic');
     doc.text(vocData.candidateName || '', pw/2, y, {align:'center'});
-    y += 15; doc.setFontSize(12); doc.setFont('helvetica', 'normal');
+
+    // "Has been verified as being competent in"
+    y += 12;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
     doc.text('Has been verified as being competent in', pw/2, y, {align:'center'});
-    y += 12; doc.setFontSize(20); doc.setFont('helvetica', 'normal');
-    let unitText = vocData.unitTitle || ''; if (vocData.ewpType) unitText += ` (${vocData.ewpType})`;
-    doc.text(unitText, pw/2, y, {align:'center'});
-    y += 25; doc.setFontSize(11); doc.setFont('helvetica', 'normal');
-    const labelX = 55, valueX = 105;
-    if (vocData.machineMake) { doc.text('Machine make:', labelX, y); doc.text(vocData.machineMake, valueX, y); y += 10; }
-    if (vocData.machineModel) { doc.text('Model:', labelX, y); doc.text(vocData.machineModel, valueX, y); y += 10; }
-    doc.text('Date of issue:', labelX, y); doc.text(formatDate(vocData.assessmentDate), valueX, y);
-    y += 30; doc.text('Authorised Signature:', labelX, y);
-    if (vocData.sigAssessor) { try { doc.addImage(vocData.sigAssessor, 'PNG', valueX, y - 15, 50, 25); } catch(e){} }
-    y += 15; doc.text(vocData.assessor + '-Director', valueX, y);
-    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+
+    // Unit/Competency title
+    y += 12;
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'normal');
+    let unitText = vocData.unitTitle || '';
+    if (vocData.ewpType) unitText += ` (${vocData.ewpType})`;
+
+    // Handle long unit titles
+    const unitLines = doc.splitTextToSize(unitText, pw - 60);
+    doc.text(unitLines, pw/2, y, {align:'center'});
+    y += (unitLines.length * 8);
+
+    // Machine details
+    y += 15;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    const labelX = 55;
+    const valueX = 110;
+
+    if (vocData.machineMake) {
+        doc.text('Machine make:', labelX, y);
+        doc.text(vocData.machineMake, valueX, y);
+        y += 8;
+    }
+    if (vocData.machineModel) {
+        doc.text('Model:', labelX, y);
+        doc.text(vocData.machineModel, valueX, y);
+        y += 8;
+    }
+    doc.text('Date of issue:', labelX, y);
+    doc.text(formatDate(vocData.assessmentDate), valueX, y);
+
+    // Signature section
+    y += 25;
+    doc.text('Authorised Signature:', labelX, y);
+
+    // Add assessor signature
+    if (vocData.sigAssessor) {
+        try {
+            doc.addImage(vocData.sigAssessor, 'PNG', valueX, y - 12, 45, 20);
+        } catch(e) {}
+    }
+
+    // Assessor name
+    y += 15;
+    doc.text('Shane McCann-Director', valueX, y);
+
+    // Footer
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
     doc.text('Elite Licensing Pty Ltd', 20, ph - 25);
     doc.setFont('helvetica', 'normal');
     doc.text('P: 0431769828 E: admin@elitelicensing.com.au', 58, ph - 25);
     doc.text('ABN: 89682665390', 20, ph - 20);
     doc.text('Elitelicensing.com.au', 20, ph - 15);
+
     return doc;
 }
 
-function downloadCertificate() {
+// iOS-friendly PDF save
+function saveCertificatePDF() {
     const doc = generatePDF();
-    doc.save('VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.unitCode+'_'+vocData.certificateId+'.pdf');
+    const fileName = 'VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.unitCode+'_'+vocData.certificateId+'.pdf';
+
+    // Check if on iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    if (isIOS && navigator.share) {
+        // Use Web Share API on iOS for better experience
+        doc.output('blob').then(blob => {
+            const file = new File([blob], fileName, { type: 'application/pdf' });
+            navigator.share({
+                files: [file],
+                title: 'VOC Certificate',
+            }).catch(() => {
+                // Fallback if share fails
+                doc.save(fileName);
+            });
+        });
+    } else {
+        // Standard download for other platforms
+        doc.save(fileName);
+    }
+
+    // Show helpful message
+    setTimeout(() => {
+        if (isIOS) {
+            alert('PDF ready! Choose "Save to Files" to save it, or share directly to SharePoint/email.');
+        }
+    }, 500);
 }
 
 function openSharePoint() {
@@ -643,6 +971,7 @@ function openSharePoint() {
 async function emailToStudent() {
     if (!vocData.email) { alert('No email address provided for candidate'); return; }
     const doc = generatePDF();
+    const fileName = 'VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.unitCode+'_'+vocData.certificateId+'.pdf';
     const subject = encodeURIComponent(`VOC Certificate - ${vocData.unitTitle} - Elite Licensing`);
     const body = encodeURIComponent(`Dear ${vocData.candidateName},
 
@@ -660,27 +989,80 @@ P: 0431769828
 E: admin@elitelicensing.com.au
 W: Elitelicensing.com.au
 ABN: 89682665390`);
-    doc.save('VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.unitCode+'_'+vocData.certificateId+'.pdf');
+    doc.save(fileName);
     setTimeout(() => { window.location.href = `mailto:${vocData.email}?subject=${subject}&body=${body}`; alert('PDF downloaded! Please attach it to the email.'); }, 500);
 }
 
-function downloadJSON() {
-    const blob = new Blob([JSON.stringify(vocData, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = 'VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.certificateId+'.json'; a.click();
+// Clean assessment summary without base64 signatures
+function downloadAssessmentData() {
+    // Create clean summary without base64 data
+    const summary = {
+        certificateId: vocData.certificateId,
+        timestamp: vocData.timestamp,
+        candidate: {
+            name: vocData.candidateName,
+            licenceNumber: vocData.candidateId,
+            dob: vocData.candidateDob,
+            address: vocData.candidateAddress,
+            phone: vocData.phone,
+            email: vocData.email,
+            employer: vocData.employer,
+            idPhotosAttached: vocData.idPhotos || 0
+        },
+        hrwl: {
+            number: vocData.hrwlNumber,
+            expiry: vocData.hrwlExpiry,
+            classes: vocData.hrwlClasses,
+            photosAttached: vocData.hrwlPhotos || 0
+        },
+        equipment: {
+            dataPlatePhotosAttached: vocData.dataPlatePhotos || 0,
+            miscPhotosAttached: vocData.miscPhotos || 0,
+            miscPhotoNotes: vocData.miscPhotoNotes || ''
+        },
+        assessment: {
+            unitCode: vocData.unitCode,
+            unitTitle: vocData.unitTitle,
+            ewpType: vocData.ewpType || null,
+            machineMake: vocData.machineMake,
+            machineModel: vocData.machineModel,
+            assessor: vocData.assessor,
+            date: vocData.assessmentDate,
+            outcome: vocData.outcome,
+            notes: vocData.notes
+        },
+        preassessmentChecks: vocData.preassessment,
+        theoryChecks: vocData.theory,
+        practicalChecks: vocData.practical,
+        knowledgeQuestions: vocData.questionAnswers,
+        signatures: {
+            candidateSigned: !!vocData.sigCandidate,
+            assessorSigned: !!vocData.sigAssessor
+        }
+    };
+
+    const blob = new Blob([JSON.stringify(summary, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'VOC_Assessment_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.certificateId+'.json';
+    a.click();
 }
 
 function formatDate(d) { if (!d) return new Date().toLocaleDateString('en-AU'); return new Date(d).toLocaleDateString('en-AU'); }
 
 function startNew() {
-    vocData = {}; selectedEwpType = '';
+    vocData = {};
+    selectedEwpType = '';
+    capturedPhotos = { id: [], hrwl: [], dataplate: [], misc: [] };
     document.querySelectorAll('input').forEach(i => { if (i.type === 'checkbox') i.checked = false; else if (i.type === 'date') i.valueAsDate = new Date(); else i.value = ''; });
     document.getElementById('unit-select').selectedIndex = 0;
+    document.getElementById('assessor-select').selectedIndex = 0;
     document.getElementById('ewp-type-section').style.display = 'none';
     document.querySelectorAll('.ewp-type-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('assessment-notes').value = '';
     document.querySelectorAll('.ocr-status').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.scanned-preview').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.photo-gallery').forEach(el => el.innerHTML = '');
     sigPadCandidate.clear(); sigPadAssessor.clear();
     showStep(1);
 }
