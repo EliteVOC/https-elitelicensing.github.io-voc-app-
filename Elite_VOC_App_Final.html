@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VOC App">
+    <title>Elite Licensing - VOC Assessment</title>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        :root{--orange:#E87722;--blue:#1E3A5F;--green:#28a745;--red:#dc3545;--gray:#6c757d;--light:#f8f9fa}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--light);min-height:100vh;padding-bottom:80px}
+        .header{background:linear-gradient(135deg,var(--blue),#2a4a6f);color:white;padding:15px 20px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
+        .header h1{font-size:1.2em}.header .subtitle{font-size:.75em;opacity:.8}
+        .progress-bar{display:flex;background:white;padding:12px;box-shadow:0 2px 5px rgba(0,0,0,.1);overflow-x:auto}
+        .step-indicator{flex:1;text-align:center;padding:5px 3px;font-size:.7em;color:var(--gray);min-width:50px}
+        .step-indicator.active{color:var(--orange);font-weight:700}
+        .step-indicator.completed{color:var(--green)}
+        .step-indicator .step-num{display:inline-block;width:22px;height:22px;line-height:22px;border-radius:50%;background:#e0e0e0;color:white;margin-bottom:3px;font-weight:bold}
+        .step-indicator.active .step-num{background:var(--orange)}
+        .step-indicator.completed .step-num{background:var(--green)}
+        .container{max-width:800px;margin:0 auto;padding:15px}
+        .card{background:white;border-radius:12px;padding:18px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+        .card h2{color:var(--blue);font-size:1.1em;margin-bottom:12px}
+        .card h3{color:var(--gray);font-size:.9em;margin:18px 0 12px}
+        .form-group{margin-bottom:15px}
+        .form-group label{display:block;font-weight:600;margin-bottom:5px;color:#333;font-size:.85em}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:16px}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--orange)}
+        .form-group textarea{min-height:80px;resize:vertical}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .scan-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;margin-bottom:10px}
+        .scan-btn:active{transform:scale(.98)}
+        .scan-btn.scanning{background:var(--orange);animation:pulse 1.5s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+        .camera-container{display:none;background:#000;border-radius:12px;overflow:hidden;margin-bottom:12px;position:relative}
+        .camera-container video{width:100%;max-height:300px;object-fit:cover}
+        .camera-container canvas{display:none}
+        .camera-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:3px dashed rgba(255,255,255,.7);width:80%;height:60%;border-radius:8px;pointer-events:none}
+        .camera-instructions{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:white;font-size:.85em;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+        .capture-btn{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);width:70px;height:70px;border-radius:50%;background:white;border:4px solid var(--orange);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.5em}
+        .ocr-status{padding:10px;border-radius:8px;margin:10px 0;text-align:center;font-size:.9em}
+        .ocr-status.processing{background:#fff3e0;color:#e65100}
+        .ocr-status.success{background:#e8f5e9;color:var(--green)}
+        .ocr-status.error{background:#ffebee;color:var(--red)}
+        .checkbox-group{display:flex;align-items:center;gap:10px;padding:12px;background:var(--light);border-radius:8px;margin-bottom:8px}
+        .checkbox-group input[type="checkbox"]{width:22px;height:22px;accent-color:var(--green)}
+        .checkbox-group label{font-size:.9em;margin:0}
+        .checklist-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--light);border-radius:8px;margin-bottom:6px}
+        .checklist-item span{flex:1;font-size:.85em;padding-right:10px}
+        .checklist-buttons{display:flex;gap:6px;flex-shrink:0}
+        .checklist-buttons button{padding:6px 14px;border:2px solid #ddd;border-radius:6px;background:white;font-weight:600;font-size:.85em;cursor:pointer}
+        .checklist-buttons button.yes.selected{background:var(--green);color:white;border-color:var(--green)}
+        .checklist-buttons button.no.selected{background:var(--red);color:white;border-color:var(--red)}
+        .question-item{background:var(--light);border-radius:8px;padding:15px;margin-bottom:12px}
+        .question-item label{font-weight:600;font-size:.9em;color:var(--blue);display:block;margin-bottom:8px}
+        .question-item textarea{width:100%;min-height:60px;padding:10px;border:2px solid #e0e0e0;border-radius:6px;font-size:14px;resize:vertical}
+        .question-item textarea:focus{outline:none;border-color:var(--orange)}
+        .signature-container{border:2px solid #e0e0e0;border-radius:8px;background:white;margin-bottom:8px}
+        .signature-pad{width:100%;height:120px;touch-action:none}
+        .signature-actions button{padding:8px 16px;border:none;border-radius:6px;font-size:.85em;cursor:pointer;background:#eee;margin-top:8px}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border:none;border-radius:8px;font-size:.95em;font-weight:600;cursor:pointer}
+        .btn:active{transform:scale(.98)}
+        .btn-primary{background:var(--orange);color:white}
+        .btn-secondary{background:#e0e0e0;color:#333}
+        .btn-success{background:var(--green);color:white}
+        .btn-blue{background:var(--blue);color:white}
+        .btn-block{width:100%}
+        .btn-lg{padding:16px 28px;font-size:1em}
+        .nav-buttons{display:flex;gap:12px;margin-top:20px}
+        .nav-buttons .btn{flex:1}
+        .outcome-buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px}
+        .outcome-btn{padding:20px;border:3px solid;border-radius:12px;font-size:.95em;font-weight:700;cursor:pointer;text-align:center}
+        .outcome-btn.competent{background:#e8f5e9;border-color:var(--green);color:var(--green)}
+        .outcome-btn.nyc{background:#ffebee;border-color:var(--red);color:var(--red)}
+        .success-banner{background:var(--green);color:white;padding:25px;border-radius:12px;text-align:center;margin-bottom:15px}
+        .success-banner h2{color:white;font-size:1.3em;margin-bottom:8px}
+        .info-banner{background:linear-gradient(135deg,var(--orange),#f59542);color:white;padding:12px 15px;border-radius:8px;margin-bottom:15px}
+        .info-banner strong{display:block;font-size:1em}
+        .info-banner span{font-size:.85em;opacity:.9}
+        .section{display:none}
+        .section.active{display:block}
+        .upload-instructions{background:#e3f2fd;border:2px solid var(--blue);border-radius:12px;padding:18px;margin:15px 0}
+        .upload-instructions h3{color:var(--blue);margin-bottom:12px;font-size:1em}
+        .upload-instructions ol{margin-left:20px;font-size:.9em;line-height:1.8}
+        .upload-instructions li{margin-bottom:5px}
+        .divider{text-align:center;color:#999;margin:12px 0;font-size:.85em}
+        .ewp-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:15px}
+        .ewp-type-btn{padding:12px 8px;border:2px solid #e0e0e0;border-radius:8px;background:white;font-size:.8em;font-weight:600;cursor:pointer;text-align:center}
+        .ewp-type-btn.selected{border-color:var(--orange);background:#fff5ed;color:var(--orange)}
+        .scanned-preview{background:#f0f7ff;border:2px solid var(--blue);border-radius:8px;padding:12px;margin:10px 0}
+        .scanned-preview h4{color:var(--blue);margin-bottom:8px;font-size:.9em}
+        .scanned-preview p{font-size:.85em;margin:4px 0}
+        @media(max-width:500px){.outcome-buttons,.form-row{grid-template-columns:1fr}.ewp-type-grid{grid-template-columns:repeat(2,1fr)}}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div><h1>VOC Assessment</h1><div class="subtitle">Elite Licensing Pty Ltd</div></div>
+    </div>
+
+    <div class="progress-bar">
+        <div class="step-indicator active"><div class="step-num">1</div><div>ID</div></div>
+        <div class="step-indicator"><div class="step-num">2</div><div>HRWL</div></div>
+        <div class="step-indicator"><div class="step-num">3</div><div>Unit</div></div>
+        <div class="step-indicator"><div class="step-num">4</div><div>Assess</div></div>
+        <div class="step-indicator"><div class="step-num">5</div><div>Sign</div></div>
+        <div class="step-indicator"><div class="step-num">6</div><div>Save</div></div>
+    </div>
+
+    <div class="container">
+        <!-- STEP 1: ID -->
+        <div class="section active" id="step1">
+            <div class="card">
+                <h2>Candidate Details</h2>
+                <button class="scan-btn" id="scan-id-btn" onclick="startCamera('id')">Scan Driver Licence</button>
+                <div class="camera-container" id="camera-id">
+                    <video id="video-id" autoplay playsinline></video>
+                    <canvas id="canvas-id"></canvas>
+                    <div class="camera-overlay"></div>
+                    <div class="camera-instructions">Position licence within the frame</div>
+                    <button class="capture-btn" onclick="captureAndScan('id')">Capture</button>
+                </div>
+                <div id="ocr-status-id" class="ocr-status" style="display:none"></div>
+                <div id="scanned-preview-id" class="scanned-preview" style="display:none"></div>
+                <div class="divider">or enter manually</div>
+                <div class="form-group"><label>Full Name *</label><input type="text" id="candidate-name" placeholder="Enter full name"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Licence Number</label><input type="text" id="candidate-id" placeholder="Driver licence"></div>
+                    <div class="form-group"><label>DOB</label><input type="date" id="candidate-dob"></div>
+                </div>
+                <div class="form-group"><label>Address</label><input type="text" id="candidate-address" placeholder="Address"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Phone</label><input type="tel" id="candidate-phone" placeholder="Mobile"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="candidate-email" placeholder="Email"></div>
+                </div>
+                <div class="form-group"><label>Employer / Company *</label><input type="text" id="candidate-employer" placeholder="Company name" list="company-list"><datalist id="company-list"></datalist></div>
+            </div>
+            <button class="btn btn-primary btn-block btn-lg" onclick="nextStep(2)">Next - Verify HRWL</button>
+        </div>
+
+        <!-- STEP 2: HRWL -->
+        <div class="section" id="step2">
+            <div class="card">
+                <h2>Verify HRW Licence</h2>
+                <div class="info-banner"><strong id="step2-name">Candidate</strong><span>Verify current HRW Licence</span></div>
+                <button class="scan-btn" id="scan-hrwl-btn" onclick="startCamera('hrwl')">Scan HRWL Card</button>
+                <div class="camera-container" id="camera-hrwl">
+                    <video id="video-hrwl" autoplay playsinline></video>
+                    <canvas id="canvas-hrwl"></canvas>
+                    <div class="camera-overlay"></div>
+                    <div class="camera-instructions">Position HRWL card within the frame</div>
+                    <button class="capture-btn" onclick="captureAndScan('hrwl')">Capture</button>
+                </div>
+                <div id="ocr-status-hrwl" class="ocr-status" style="display:none"></div>
+                <div id="scanned-preview-hrwl" class="scanned-preview" style="display:none"></div>
+                <div class="divider">or enter manually</div>
+                <div class="form-row">
+                    <div class="form-group"><label>HRWL Number *</label><input type="text" id="hrwl-number" placeholder="Licence number"></div>
+                    <div class="form-group"><label>Expiry Date</label><input type="date" id="hrwl-expiry"></div>
+                </div>
+                <div class="form-group"><label>Classes Held</label><input type="text" id="hrwl-classes" placeholder="e.g., LF, DG, RB, CN"></div>
+                <div class="checkbox-group"><input type="checkbox" id="chk-hrwl-sighted"><label for="chk-hrwl-sighted">HRWL sighted and valid</label></div>
+                <div class="checkbox-group"><input type="checkbox" id="chk-photo-match"><label for="chk-photo-match">Photo ID matches candidate</label></div>
+            </div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(1)">Back</button><button class="btn btn-primary" onclick="nextStep(3)">Next</button></div>
+        </div>
+
+        <!-- STEP 3: Unit -->
+        <div class="section" id="step3">
+            <div class="card">
+                <h2>Unit & Equipment</h2>
+                <div class="info-banner"><strong id="step3-name">Candidate</strong><span id="step3-company"></span></div>
+                <div class="form-group"><label>Select VOC Type *</label>
+                    <select id="unit-select" onchange="onUnitChange()">
+                        <option value="">-- Select VOC Type --</option>
+                        <optgroup label="Cranes">
+                            <option value="CN|Non-Slewing Mobile Crane (Franna)">CN - Non-Slewing Mobile Crane (Franna)</option>
+                            <option value="SLEW|Slewing Mobile Crane">Slewing Mobile Crane</option>
+                        </optgroup>
+                        <optgroup label="EWP">
+                            <option value="EWP|Elevating Work Platform">EWP - Elevating Work Platform</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                            <option value="TLH|Telehandler">Telehandler</option>
+                            <option value="DG|Dogging">DG - Dogging</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div id="ewp-type-section" style="display:none">
+                    <label style="font-weight:600;font-size:.85em;margin-bottom:8px;display:block">EWP Type *</label>
+                    <div class="ewp-type-grid">
+                        <button class="ewp-type-btn" onclick="selectEwpType(this,'VL')">VL<br><small>Vertical Lift</small></button>
+                        <button class="ewp-type-btn" onclick="selectEwpType(this,'SL')">SL<br><small>Scissor Lift</small></button>
+                        <button class="ewp-type-btn" onclick="selectEwpType(this,'BL')">BL<br><small>Boom Lift</small></button>
+                        <button class="ewp-type-btn" onclick="selectEwpType(this,'TL')">TL<br><small>Trailer Lift</small></button>
+                        <button class="ewp-type-btn" onclick="selectEwpType(this,'TM')">TM<br><small>Truck Mounted</small></button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group"><label id="equipment-label">Plant/Equipment Make</label><input type="text" id="machine-make" placeholder="e.g., Franna, JLG, Toyota"></div>
+                    <div class="form-group"><label>Model</label><input type="text" id="machine-model" placeholder="e.g., AT-20, 450AJ"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Assessor *</label>
+                        <select id="assessor-select"><option value="Nick Thompson">Nick Thompson</option><option value="Shane McCann">Shane McCann</option></select>
+                    </div>
+                    <div class="form-group"><label>Date</label><input type="date" id="assessment-date"></div>
+                </div>
+            </div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(2)">Back</button><button class="btn btn-primary" onclick="nextStep(4)">Next</button></div>
+        </div>
+
+        <!-- STEP 4: Assessment -->
+        <div class="section" id="step4">
+            <div class="card">
+                <h2>Assessment</h2>
+                <div class="info-banner"><strong id="step4-name">Candidate</strong><span id="step4-unit"></span></div>
+
+                <h3>Pre-Assessment Checks</h3>
+                <div id="preassessment-checks"></div>
+
+                <h3>Theory Assessment</h3>
+                <div id="theory-checks"></div>
+
+                <h3>Practical Assessment</h3>
+                <div id="practical-checks"></div>
+            </div>
+
+            <div class="card">
+                <h2>Knowledge Questions</h2>
+                <div id="knowledge-questions"></div>
+            </div>
+
+            <div class="card">
+                <h2>Outcome</h2>
+                <div class="form-group"><label>Comments / Gap Training Required</label><textarea id="assessment-notes" placeholder="Comments or required gap training..."></textarea></div>
+                <div class="outcome-buttons">
+                    <button class="outcome-btn nyc" onclick="setOutcome('NYC')">NOT YET COMPETENT</button>
+                    <button class="outcome-btn competent" onclick="setOutcome('C')">COMPETENT</button>
+                </div>
+            </div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(3)">Back</button></div>
+        </div>
+
+        <!-- STEP 5: Signatures -->
+        <div class="section" id="step5">
+            <div class="card">
+                <h2>Signatures</h2>
+                <div class="info-banner"><strong id="step5-name">Candidate</strong><span>Outcome: <strong id="step5-outcome">COMPETENT</strong></span></div>
+                <h3>Candidate Declaration</h3>
+                <p style="font-size:.85em;color:#666;margin-bottom:12px">I believe myself to be competent and confident to safely perform the tasks related to this license class.</p>
+                <label style="font-weight:600;font-size:.85em;margin-bottom:8px;display:block">Candidate Signature</label>
+                <div class="signature-container"><canvas id="sig-candidate" class="signature-pad"></canvas></div>
+                <button class="signature-actions" onclick="clearSignature('candidate')">Clear</button>
+                <h3>Assessor Signature</h3>
+                <label style="font-weight:600;font-size:.85em;margin-bottom:8px;display:block">Assessor: <span id="step5-assessor"></span></label>
+                <div class="signature-container"><canvas id="sig-assessor" class="signature-pad"></canvas></div>
+                <button class="signature-actions" onclick="clearSignature('assessor')">Clear</button>
+            </div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(4)">Back</button><button class="btn btn-success btn-lg" onclick="saveAndComplete()" style="flex:2">Save & Complete</button></div>
+        </div>
+
+        <!-- STEP 6: Complete -->
+        <div class="section" id="step6">
+            <div class="success-banner"><h2>VOC COMPLETE</h2><p id="cert-id"></p></div>
+
+            <div class="upload-instructions">
+                <h3>Save to SharePoint</h3>
+                <ol>
+                    <li>Tap <strong>"Download Certificate PDF"</strong> below</li>
+                    <li>Tap <strong>"Open SharePoint Folder"</strong></li>
+                    <li>Tap <strong>Upload</strong> and select the PDF from Downloads</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <p><strong>Candidate:</strong> <span id="final-name"></span></p>
+                <p><strong>Company:</strong> <span id="final-company"></span></p>
+                <p><strong>Unit:</strong> <span id="final-unit"></span></p>
+                <p><strong>Equipment:</strong> <span id="final-machine"></span></p>
+                <p><strong>Date:</strong> <span id="final-date"></span></p>
+                <p><strong>Assessor:</strong> <span id="final-assessor"></span></p>
+                <p><strong>Outcome:</strong> <span id="final-outcome"></span></p>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-lg" onclick="downloadCertificate()">1. Download Certificate PDF</button>
+            <button class="btn btn-blue btn-block btn-lg" style="margin-top:12px" onclick="openSharePoint()">2. Open SharePoint Folder</button>
+
+            <div class="divider" style="margin:20px 0">Other Options</div>
+
+            <button class="btn btn-success btn-block" onclick="emailToStudent()">Email Certificate to Student</button>
+            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadJSON()">Download Full Assessment Data</button>
+            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="startNew()">Start New Assessment</button>
+        </div>
+    </div>
+
+<script>
+// SharePoint URL for VOC Records
+const SHAREPOINT_URL = 'https://elitelicensing01.sharepoint.com/Shared%20Documents/Documents1/VOC\'s/VOC%20Records';
+
+// Google Cloud Vision API
+const VISION_API_KEY = 'AIzaSyAkjxGolwduddiXtRkYWwJmKTwmxLYbav0';
+const VISION_API_URL = 'https://vision.googleapis.com/v1/images:annotate?key=' + VISION_API_KEY;
+
+// VOC Data by Unit Type
+const VOC_DATA = {
+    'CN': {
+        name: 'Non-Slewing Mobile Crane (Franna)',
+        preassessment: ['HRWL sighted and valid?','PPE worn and functional?','Pre-start checks completed?','Logbook entries up to date?'],
+        theory: ['Demonstrates understanding of WHS legislation and site rules','Can identify and implement risk controls for relevant hazards','Reads and interprets load charts/capacity','Understands communications, signals, and procedures'],
+        practical: ['Correctly completes machine pre-start and setup','Accurately configures and operates Non-Slewing Mobile Crane','Demonstrates safe load lift, transport, and placement','Manages shutdown, reporting, and records appropriately','Follows site rules and risk controls throughout operation'],
+        questions: ['List 5 pre-start inspections you would perform on a Non-Slewing Mobile Crane (Franna)?','What ground conditions and surface stability factors must you assess before setting up a Franna for a lift?','What is the minimum distance you must keep your Franna and load from uninsulated overhead electric lines? Up to 132kV: _____ Above 132kV but less than 330kV: _____ Above 330kV: _____','List 5 hazards when operating a Non-Slewing Mobile Crane?','What effect does wind have on the crane and its loads?','How do you determine the maximum weight that can be safely lifted, and what are four reasons for performing a test lift?','Why must the seatbelt be worn at all times when operating the crane?','What steps must you take before leaving the crane\'s controls and at termination of shift?','What communication methods should be used between the crane operator and the person directing crane movements?']
+    },
+    'SLEW': {
+        name: 'Slewing Mobile Crane',
+        preassessment: ['HRWL sighted and valid?','PPE worn and functional?','Pre-start checks completed?','Logbook entries up to date?'],
+        theory: ['Demonstrates understanding of WHS legislation and site rules','Can identify and implement risk controls for relevant hazards','Reads and interprets load charts/capacity','Understands communications, signals, and procedures'],
+        practical: ['Correctly completes machine pre-start and setup','Accurately configures and operates Slewing Mobile Crane','Demonstrates safe load lift, transport, and placement','Manages shutdown, reporting, and records appropriately','Follows site rules and risk controls throughout operation'],
+        questions: ['List 5 Prestart inspections','What emergency procedures would you follow if an outrigger begins to sink during a lift, and how do you prevent this situation?','How do you confirm the ground bearing pressure is adequate and calculate the required outrigger matting size for today\'s lift?','List 5 hazards when operating a mobile crane?','What effect does the wind have on the crane and its loads?','If the load is not rigged correctly or the slings/shackles appear damaged, what is your responsibility as the crane operator?','How do you check if the LMI is working and accurate?','Describe the safe approach distances to overhead powerlines for this crane at various voltages, and what you do if minimum clearances cannot be maintained','What do you do if you find a fault or any damage to the crane?']
+    },
+    'EWP': {
+        name: 'Elevating Work Platform',
+        preassessment: ['Licence/qualification sighted and valid?','PPE worn and functional?','Pre-start checks completed?','Logbook entries up to date?'],
+        theory: ['Demonstrates understanding of WHS legislation and site rules','Can identify and implement risk controls for EWP hazards','Reads and interprets load charts and capacity ratings','Understands communications, signals, and procedures'],
+        practical: ['Correctly completes machine pre-start and setup','Accurately configures and operates EWP','Demonstrates safe elevation, positioning, and lowering','Manages shutdown, reporting, and records appropriately','Follows site rules and risk controls throughout operation'],
+        questions: ['List 5 pre-start inspections you would perform on an EWP?','What are 5 typical hazards associated with EWP operations?','What is the minimum safe approach distance to overhead powerlines, and what do you do if clearances cannot be maintained?','When must a harness be worn when operating an EWP, and where should it be attached?','What should you check before elevating the platform?','Describe the correct procedure for entering and exiting the platform/basket.','What action should you take if you identify a fault or damage during operation?','How do you perform an emergency lowering procedure?','Explain the correct shutdown and parking procedure for an EWP.']
+    },
+    'TLH': {
+        name: 'Telehandler',
+        preassessment: ['License/qualification sighted and valid?','PPE worn and functional?','Pre-start checks completed?','Logbook entries up to date?'],
+        theory: ['Demonstrates understanding of WHS legislation and site rules','Can identify and implement risk controls for telehandler hazards','Reads and interprets load charts and capacity ratings','Understands communications, signals, and procedures'],
+        practical: ['Correctly completes machine pre-start and setup','Accurately configures and operates Telehandler','Demonstrates safe load lift, transport, and placement','Manages shutdown, reporting, and records appropriately','Follows site rules and risk controls throughout operation'],
+        questions: ['What are typical hazards associated with Telehandler operations, and how do you identify and manage these risks?','What could happen if you fail to check ground conditions before operating? What assessment should you complete?','State the safe approach distances to overhead powerlines and how you maintain those distances during operation.','Must you wear a seatbelt while operating a Telehandler? Explain why.','How do you manage overload risk when planning to move loads? What should you consider regarding load weight and ground conditions?','What ground conditions and slopes are acceptable for Telehandler setup? How do you read a load chart?','Explain the exclusion zone requirements around the Telehandler during operation.','Describe the safe travel procedure when traveling with a load on the forks.','Explain the proper shutdown procedure at termination of shift.']
+    },
+    'DG': {
+        name: 'Dogging',
+        preassessment: ['HRWL sighted and valid?','PPE worn and functional?','Pre-start checks completed?','Logbook entries up to date?'],
+        theory: ['Demonstrates understanding of WHS legislation and site rules','Can identify and implement risk controls for relevant hazards','Demonstrates Knowledge of Whistles','Demonstrates Knowledge of Hand Signals'],
+        practical: ['Correctly Inspects Rigging Gear prior to use','Accurately apply correct slinging techniques','Demonstrates safe load lift, transport, and placement','Manages any defective equipment properly','Follows site rules and risk controls throughout operation'],
+        questions: ['Identify three defect criteria on chain slings and shackles that would require immediate removal from service.','How would you determine the safe WLL of chains and slings?','Explain the inspection process for synthetic slings: What damage would you look for and what constitutes rejection?','What is the maximum permitted angle you can choke/Reeve a load with Chains?','What is the maximum allowable angle on a Direct Lift?','How do you lift steel or metal loads using chains?','When would you use a tagline?','Is it safe to lift over people\'s heads at any time?']
+    }
+};
+
+let currentStep = 1;
+let vocData = {};
+let sigPadCandidate = null;
+let sigPadAssessor = null;
+let activeStreams = {};
+let selectedEwpType = '';
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('assessment-date').valueAsDate = new Date();
+    initSignaturePads();
+});
+
+function initSignaturePads() {
+    const c1 = document.getElementById('sig-candidate');
+    const c2 = document.getElementById('sig-assessor');
+    sigPadCandidate = new SignaturePad(c1, {backgroundColor:'rgb(255,255,255)'});
+    sigPadAssessor = new SignaturePad(c2, {backgroundColor:'rgb(255,255,255)'});
+    resizeCanvas(c1, sigPadCandidate);
+    resizeCanvas(c2, sigPadAssessor);
+    window.addEventListener('resize', () => { resizeCanvas(c1, sigPadCandidate); resizeCanvas(c2, sigPadAssessor); });
+}
+
+function resizeCanvas(canvas, pad) {
+    const data = pad.toData();
+    const r = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * r;
+    canvas.height = canvas.offsetHeight * r;
+    canvas.getContext('2d').scale(r, r);
+    if (data && data.length > 0) pad.fromData(data);
+}
+
+function clearSignature(type) {
+    if (type === 'candidate') sigPadCandidate.clear();
+    if (type === 'assessor') sigPadAssessor.clear();
+}
+
+function onUnitChange() {
+    const val = document.getElementById('unit-select').value;
+    document.getElementById('ewp-type-section').style.display = val.startsWith('EWP') ? 'block' : 'none';
+    if (!val.startsWith('EWP')) selectedEwpType = '';
+}
+
+function selectEwpType(btn, type) {
+    document.querySelectorAll('.ewp-type-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedEwpType = type;
+}
+
+function buildAssessmentForm(unitCode) {
+    const data = VOC_DATA[unitCode];
+    if (!data) return;
+    document.getElementById('preassessment-checks').innerHTML = data.preassessment.map(item => `<div class="checklist-item"><span>${item}</span><div class="checklist-buttons"><button class="yes" onclick="toggleCheck(this)">YES</button><button class="no" onclick="toggleCheck(this)">NO</button></div></div>`).join('');
+    document.getElementById('theory-checks').innerHTML = data.theory.map(item => `<div class="checklist-item"><span>${item}</span><div class="checklist-buttons"><button class="yes" onclick="toggleCheck(this)">YES</button><button class="no" onclick="toggleCheck(this)">NO</button></div></div>`).join('');
+    document.getElementById('practical-checks').innerHTML = data.practical.map(item => `<div class="checklist-item"><span>${item}</span><div class="checklist-buttons"><button class="yes" onclick="toggleCheck(this)">YES</button><button class="no" onclick="toggleCheck(this)">NO</button></div></div>`).join('');
+    document.getElementById('knowledge-questions').innerHTML = data.questions.map((q, i) => `<div class="question-item"><label>${i+1}) ${q}</label><textarea id="q${i}" placeholder="Enter answer..."></textarea></div>`).join('');
+}
+
+function toggleCheck(btn) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+async function startCamera(type) {
+    const container = document.getElementById('camera-' + type);
+    const video = document.getElementById('video-' + type);
+    const btn = document.getElementById('scan-' + type + '-btn');
+    if (container.style.display === 'block') { stopCamera(type); return; }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
+        video.srcObject = stream;
+        activeStreams[type] = stream;
+        container.style.display = 'block';
+        btn.textContent = 'Close Camera';
+        btn.classList.add('scanning');
+    } catch (err) { alert('Could not access camera. Please enter details manually.'); }
+}
+
+function stopCamera(type) {
+    const container = document.getElementById('camera-' + type);
+    const video = document.getElementById('video-' + type);
+    const btn = document.getElementById('scan-' + type + '-btn');
+    if (activeStreams[type]) { activeStreams[type].getTracks().forEach(track => track.stop()); delete activeStreams[type]; }
+    video.srcObject = null;
+    container.style.display = 'none';
+    btn.textContent = type === 'id' ? 'Scan Driver Licence' : 'Scan HRWL Card';
+    btn.classList.remove('scanning');
+}
+
+async function captureAndScan(type) {
+    const video = document.getElementById('video-' + type);
+    const canvas = document.getElementById('canvas-' + type);
+    const statusEl = document.getElementById('ocr-status-' + type);
+    const previewEl = document.getElementById('scanned-preview-' + type);
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const imageData = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+    stopCamera(type);
+    statusEl.style.display = 'block';
+    statusEl.className = 'ocr-status processing';
+    statusEl.textContent = 'Reading text from image...';
+    try {
+        const result = await callVisionAPI(imageData);
+        const extractedData = parseOCRResult(result, type);
+        if (extractedData) {
+            statusEl.className = 'ocr-status success';
+            statusEl.textContent = 'Text extracted successfully!';
+            fillFormFromOCR(extractedData, type);
+            showScannedPreview(extractedData, type, previewEl);
+        } else {
+            statusEl.className = 'ocr-status error';
+            statusEl.textContent = 'Could not extract details. Please enter manually.';
+        }
+    } catch (err) {
+        statusEl.className = 'ocr-status error';
+        statusEl.textContent = 'Scan failed: ' + err.message;
+    }
+}
+
+async function callVisionAPI(imageBase64) {
+    const response = await fetch(VISION_API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requests: [{ image: { content: imageBase64 }, features: [{ type: 'TEXT_DETECTION', maxResults: 1 }] }] }) });
+    if (!response.ok) throw new Error('API request failed');
+    return await response.json();
+}
+
+function parseOCRResult(result, type) {
+    const textAnnotations = result.responses?.[0]?.textAnnotations;
+    if (!textAnnotations || textAnnotations.length === 0) return null;
+    const fullText = textAnnotations[0].description;
+    if (type === 'id') {
+        const data = {};
+        const licenceMatch = fullText.match(/\b(\d{6,10})\b/);
+        if (licenceMatch) data.licenceNumber = licenceMatch[1];
+        const nameMatch = fullText.match(/([A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+        if (nameMatch) data.name = nameMatch[1];
+        const dobMatch = fullText.match(/\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})\b/);
+        if (dobMatch) { const parts = dobMatch[1].split(/[\/\-]/); if (parts.length === 3) data.dob = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; }
+        return Object.keys(data).length > 0 ? data : null;
+    } else {
+        const data = {};
+        const hrwlMatch = fullText.match(/\b([A-Z]{0,2}\d{6,10})\b/);
+        if (hrwlMatch) data.hrwlNumber = hrwlMatch[1];
+        const classPattern = /\b(LF|DG|RB|RI|RA|CN|CV|C[O126]|CT|WP|SB|SI|SA)\b/gi;
+        const classes = fullText.match(classPattern);
+        if (classes) data.classes = [...new Set(classes.map(c => c.toUpperCase()))].join(', ');
+        const expiryMatch = fullText.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/);
+        if (expiryMatch) { const parts = expiryMatch[1].split(/[\/\-]/); if (parts.length === 3) data.expiry = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; }
+        return Object.keys(data).length > 0 ? data : null;
+    }
+}
+
+function fillFormFromOCR(data, type) {
+    if (type === 'id') {
+        if (data.name) document.getElementById('candidate-name').value = data.name;
+        if (data.licenceNumber) document.getElementById('candidate-id').value = data.licenceNumber;
+        if (data.dob) document.getElementById('candidate-dob').value = data.dob;
+    } else {
+        if (data.hrwlNumber) document.getElementById('hrwl-number').value = data.hrwlNumber;
+        if (data.expiry) document.getElementById('hrwl-expiry').value = data.expiry;
+        if (data.classes) document.getElementById('hrwl-classes').value = data.classes;
+    }
+}
+
+function showScannedPreview(data, type, previewEl) {
+    previewEl.style.display = 'block';
+    let html = '<h4>Extracted:</h4>';
+    if (type === 'id') {
+        if (data.name) html += `<p><strong>Name:</strong> ${data.name}</p>`;
+        if (data.licenceNumber) html += `<p><strong>Licence:</strong> ${data.licenceNumber}</p>`;
+        if (data.dob) html += `<p><strong>DOB:</strong> ${data.dob}</p>`;
+    } else {
+        if (data.hrwlNumber) html += `<p><strong>HRWL:</strong> ${data.hrwlNumber}</p>`;
+        if (data.classes) html += `<p><strong>Classes:</strong> ${data.classes}</p>`;
+        if (data.expiry) html += `<p><strong>Expiry:</strong> ${data.expiry}</p>`;
+    }
+    html += '<p style="font-size:.8em;color:#666;margin-top:8px;">Verify and correct if needed.</p>';
+    previewEl.innerHTML = html;
+}
+
+function nextStep(step) { if (!validateStep(currentStep)) return; saveStepData(currentStep); showStep(step); }
+function prevStep(step) { showStep(step); }
+
+function showStep(step) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + step).classList.add('active');
+    document.querySelectorAll('.step-indicator').forEach((ind, i) => {
+        ind.classList.remove('active', 'completed');
+        if (i < step - 1) ind.classList.add('completed');
+        if (i === step - 1) ind.classList.add('active');
+    });
+    currentStep = step;
+    if (step === 2) document.getElementById('step2-name').textContent = vocData.candidateName || '';
+    if (step === 3) { document.getElementById('step3-name').textContent = vocData.candidateName || ''; document.getElementById('step3-company').textContent = vocData.employer || ''; }
+    if (step === 4) { document.getElementById('step4-name').textContent = vocData.candidateName || ''; document.getElementById('step4-unit').textContent = vocData.unitTitle || ''; buildAssessmentForm(vocData.unitCode); }
+    if (step === 5) { document.getElementById('step5-name').textContent = vocData.candidateName || ''; document.getElementById('step5-outcome').textContent = vocData.outcome || ''; document.getElementById('step5-assessor').textContent = vocData.assessor || ''; setTimeout(() => { resizeCanvas(document.getElementById('sig-candidate'), sigPadCandidate); resizeCanvas(document.getElementById('sig-assessor'), sigPadAssessor); }, 100); }
+    if (step === 6) {
+        document.getElementById('final-name').textContent = vocData.candidateName;
+        document.getElementById('final-company').textContent = vocData.employer;
+        document.getElementById('final-unit').textContent = vocData.unitTitle + (vocData.ewpType ? ` (${vocData.ewpType})` : '');
+        document.getElementById('final-machine').textContent = [vocData.machineMake, vocData.machineModel].filter(Boolean).join(' ') || 'N/A';
+        document.getElementById('final-date').textContent = formatDate(vocData.assessmentDate);
+        document.getElementById('final-assessor').textContent = vocData.assessor;
+        document.getElementById('final-outcome').textContent = vocData.outcome;
+        document.getElementById('final-outcome').style.color = vocData.outcome === 'COMPETENT' ? 'var(--green)' : 'var(--red)';
+    }
+    window.scrollTo(0, 0);
+}
+
+function validateStep(step) {
+    if (step === 1) { if (!document.getElementById('candidate-name').value.trim()) { alert('Enter candidate name'); return false; } if (!document.getElementById('candidate-employer').value.trim()) { alert('Enter employer/company'); return false; } }
+    if (step === 2) { if (!document.getElementById('hrwl-number').value.trim()) { alert('Enter HRWL number'); return false; } if (!document.getElementById('chk-hrwl-sighted').checked || !document.getElementById('chk-photo-match').checked) { alert('Confirm HRWL sighted and photo matches'); return false; } }
+    if (step === 3) { if (!document.getElementById('unit-select').value) { alert('Select a VOC type'); return false; } if (document.getElementById('unit-select').value.startsWith('EWP') && !selectedEwpType) { alert('Select EWP type'); return false; } }
+    if (step === 5) { if (sigPadCandidate.isEmpty()) { alert('Candidate signature required'); return false; } if (sigPadAssessor.isEmpty()) { alert('Assessor signature required'); return false; } }
+    return true;
+}
+
+function saveStepData(step) {
+    if (step === 1) { vocData.candidateName = document.getElementById('candidate-name').value.trim(); vocData.candidateId = document.getElementById('candidate-id').value.trim(); vocData.candidateDob = document.getElementById('candidate-dob').value; vocData.candidateAddress = document.getElementById('candidate-address').value.trim(); vocData.employer = document.getElementById('candidate-employer').value.trim(); vocData.phone = document.getElementById('candidate-phone').value.trim(); vocData.email = document.getElementById('candidate-email').value.trim(); }
+    if (step === 2) { vocData.hrwlNumber = document.getElementById('hrwl-number').value.trim(); vocData.hrwlExpiry = document.getElementById('hrwl-expiry').value; vocData.hrwlClasses = document.getElementById('hrwl-classes').value.trim(); }
+    if (step === 3) { const [code, title] = document.getElementById('unit-select').value.split('|'); vocData.unitCode = code; vocData.unitTitle = title; vocData.ewpType = selectedEwpType; vocData.machineMake = document.getElementById('machine-make').value.trim(); vocData.machineModel = document.getElementById('machine-model').value.trim(); vocData.assessor = document.getElementById('assessor-select').value; vocData.assessmentDate = document.getElementById('assessment-date').value; }
+    if (step === 4) {
+        vocData.notes = document.getElementById('assessment-notes').value.trim();
+        vocData.preassessment = []; document.querySelectorAll('#preassessment-checks .checklist-item').forEach(item => { const sel = item.querySelector('button.selected'); vocData.preassessment.push({ item: item.querySelector('span').textContent, result: sel ? sel.textContent : 'N/A' }); });
+        vocData.theory = []; document.querySelectorAll('#theory-checks .checklist-item').forEach(item => { const sel = item.querySelector('button.selected'); vocData.theory.push({ item: item.querySelector('span').textContent, result: sel ? sel.textContent : 'N/A' }); });
+        vocData.practical = []; document.querySelectorAll('#practical-checks .checklist-item').forEach(item => { const sel = item.querySelector('button.selected'); vocData.practical.push({ item: item.querySelector('span').textContent, result: sel ? sel.textContent : 'N/A' }); });
+        vocData.questionAnswers = []; const unitData = VOC_DATA[vocData.unitCode]; if (unitData) { unitData.questions.forEach((q, i) => { const answer = document.getElementById('q' + i)?.value || ''; vocData.questionAnswers.push({ question: q, answer: answer }); }); }
+    }
+    if (step === 5) { vocData.sigCandidate = sigPadCandidate.toDataURL(); vocData.sigAssessor = sigPadAssessor.toDataURL(); }
+}
+
+function setOutcome(o) { vocData.outcome = o === 'C' ? 'COMPETENT' : 'NOT YET COMPETENT'; if (o === 'NYC') { if (!confirm('Record as NOT YET COMPETENT?')) return; } saveStepData(4); nextStep(5); }
+
+function saveAndComplete() {
+    if (!validateStep(5)) return;
+    saveStepData(5);
+    const now = new Date();
+    vocData.certificateId = 'VOC-EL-' + now.getFullYear() + '-' + String(Math.floor(Math.random()*999999)).padStart(6,'0');
+    vocData.timestamp = now.toISOString();
+    document.getElementById('cert-id').textContent = vocData.certificateId;
+    showStep(6);
+}
+
+function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pw = 210, ph = 297;
+    doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.5); doc.rect(15, 15, pw - 30, ph - 30);
+    let y = 40;
+    doc.setFontSize(28); doc.setFont('helvetica', 'bold');
+    doc.text('STATEMENT OF', pw/2, y, {align:'center'}); y += 12;
+    doc.text('VERIFICATION OF', pw/2, y, {align:'center'}); y += 12;
+    doc.text('COMPETENCY', pw/2, y, {align:'center'});
+    y += 18; doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+    const desc = 'This Statement of Verification of Competency is issued to the candidate identified below, and states that the candidate has undertaken a verification process, including both theoretical and practical assessments to determine that the candidate is competent to operate the machinery, or undertake the process as identified on this Statement. Any Verification of Competency is made on the basis of the performance of the candidate on the day, and at the time of the assessment, by the Assessor.';
+    doc.text(doc.splitTextToSize(desc, pw - 50), pw/2, y, {align:'center'});
+    y += 35; doc.setFillColor(232, 119, 34); doc.ellipse(pw/2, y, 25, 12, 'F');
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+    doc.text('EL', pw/2, y + 4, {align:'center'}); doc.setTextColor(0, 0, 0);
+    y += 25; doc.setFontSize(12); doc.setFont('helvetica', 'normal');
+    doc.text('This is a statement that', pw/2, y, {align:'center'});
+    y += 18; doc.setFontSize(32); doc.setFont('times', 'italic');
+    doc.text(vocData.candidateName || '', pw/2, y, {align:'center'});
+    y += 15; doc.setFontSize(12); doc.setFont('helvetica', 'normal');
+    doc.text('Has been verified as being competent in', pw/2, y, {align:'center'});
+    y += 12; doc.setFontSize(20); doc.setFont('helvetica', 'normal');
+    let unitText = vocData.unitTitle || ''; if (vocData.ewpType) unitText += ` (${vocData.ewpType})`;
+    doc.text(unitText, pw/2, y, {align:'center'});
+    y += 25; doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+    const labelX = 55, valueX = 105;
+    if (vocData.machineMake) { doc.text('Machine make:', labelX, y); doc.text(vocData.machineMake, valueX, y); y += 10; }
+    if (vocData.machineModel) { doc.text('Model:', labelX, y); doc.text(vocData.machineModel, valueX, y); y += 10; }
+    doc.text('Date of issue:', labelX, y); doc.text(formatDate(vocData.assessmentDate), valueX, y);
+    y += 30; doc.text('Authorised Signature:', labelX, y);
+    if (vocData.sigAssessor) { try { doc.addImage(vocData.sigAssessor, 'PNG', valueX, y - 15, 50, 25); } catch(e){} }
+    y += 15; doc.text(vocData.assessor + '-Director', valueX, y);
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+    doc.text('Elite Licensing Pty Ltd', 20, ph - 25);
+    doc.setFont('helvetica', 'normal');
+    doc.text('P: 0431769828 E: admin@elitelicensing.com.au', 58, ph - 25);
+    doc.text('ABN: 89682665390', 20, ph - 20);
+    doc.text('Elitelicensing.com.au', 20, ph - 15);
+    return doc;
+}
+
+function downloadCertificate() {
+    const doc = generatePDF();
+    doc.save('VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.unitCode+'_'+vocData.certificateId+'.pdf');
+}
+
+function openSharePoint() {
+    window.open(SHAREPOINT_URL, '_blank');
+}
+
+async function emailToStudent() {
+    if (!vocData.email) { alert('No email address provided for candidate'); return; }
+    const doc = generatePDF();
+    const subject = encodeURIComponent(`VOC Certificate - ${vocData.unitTitle} - Elite Licensing`);
+    const body = encodeURIComponent(`Dear ${vocData.candidateName},
+
+Please find attached your Statement of Verification of Competency for:
+
+Unit: ${vocData.unitTitle}${vocData.ewpType ? ` (${vocData.ewpType})` : ''}
+${vocData.machineMake ? 'Machine make: ' + vocData.machineMake + '\n' : ''}${vocData.machineModel ? 'Model: ' + vocData.machineModel + '\n' : ''}Date of issue: ${formatDate(vocData.assessmentDate)}
+
+Thank you for choosing Elite Licensing.
+
+Kind regards,
+
+Elite Licensing Pty Ltd
+P: 0431769828
+E: admin@elitelicensing.com.au
+W: Elitelicensing.com.au
+ABN: 89682665390`);
+    doc.save('VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.unitCode+'_'+vocData.certificateId+'.pdf');
+    setTimeout(() => { window.location.href = `mailto:${vocData.email}?subject=${subject}&body=${body}`; alert('PDF downloaded! Please attach it to the email.'); }, 500);
+}
+
+function downloadJSON() {
+    const blob = new Blob([JSON.stringify(vocData, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'VOC_'+vocData.candidateName.replace(/\s/g,'_')+'_'+vocData.certificateId+'.json'; a.click();
+}
+
+function formatDate(d) { if (!d) return new Date().toLocaleDateString('en-AU'); return new Date(d).toLocaleDateString('en-AU'); }
+
+function startNew() {
+    vocData = {}; selectedEwpType = '';
+    document.querySelectorAll('input').forEach(i => { if (i.type === 'checkbox') i.checked = false; else if (i.type === 'date') i.valueAsDate = new Date(); else i.value = ''; });
+    document.getElementById('unit-select').selectedIndex = 0;
+    document.getElementById('ewp-type-section').style.display = 'none';
+    document.querySelectorAll('.ewp-type-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('assessment-notes').value = '';
+    document.querySelectorAll('.ocr-status').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.scanned-preview').forEach(el => el.style.display = 'none');
+    sigPadCandidate.clear(); sigPadAssessor.clear();
+    showStep(1);
+}
+</script>
+</body>
+</html>
