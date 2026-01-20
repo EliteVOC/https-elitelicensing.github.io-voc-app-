@@ -123,7 +123,7 @@
         <div><h1>VOC Assessment</h1><div class="subtitle">Elite Licensing Pty Ltd</div></div>
         <div style="display:flex;align-items:center;gap:10px">
             <span class="status" id="connection-status">Ready</span>
-            <button class="settings-btn" onclick="showSettings()">⚙️</button>
+            <button class="settings-btn" onclick="showSettings()">âš™ï¸</button>
         </div>
     </div>
 
@@ -140,19 +140,19 @@
         <!-- STEP 1: ID -->
         <div class="section active" id="step1">
             <div class="card">
-                <h2>📋 Candidate Details</h2>
-                <button class="scan-btn" id="scan-id-btn" onclick="startCamera('id')">📷 Scan Driver Licence</button>
+                <h2>ðŸ“‹ Candidate Details</h2>
+                <button class="scan-btn" id="scan-id-btn" onclick="startCamera('id')">ðŸ“· Scan Driver Licence</button>
                 <div class="camera-container" id="camera-id">
                     <video id="video-id" autoplay playsinline></video>
                     <canvas id="canvas-id"></canvas>
                     <div class="camera-overlay"></div>
                     <div class="camera-instructions">Position licence within the frame</div>
-                    <button class="capture-btn" onclick="captureAndScan('id')">📸</button>
+                    <button class="capture-btn" onclick="captureAndScan('id')">ðŸ“¸</button>
                 </div>
                 <div id="ocr-status-id" class="ocr-status" style="display:none"></div>
                 <div id="scanned-preview-id" class="scanned-preview" style="display:none"></div>
 
-                <button class="photo-btn" onclick="takePhoto('licence')">📸 Take Licence Photo</button>
+                <button class="photo-btn" onclick="takePhoto('licence')">ðŸ“¸ Take Licence Photo</button>
                 <div class="photo-gallery" id="gallery-licence"></div>
                 <div class="photo-count" id="count-licence"></div>
 
@@ -169,26 +169,26 @@
                 </div>
                 <div class="form-group"><label>Employer / Company *</label><input type="text" id="candidate-employer" placeholder="Company name" list="company-list"><datalist id="company-list"></datalist></div>
             </div>
-            <button class="btn btn-primary btn-block btn-lg" onclick="nextStep(2)">Next → Verify HRWL</button>
+            <button class="btn btn-primary btn-block btn-lg" onclick="nextStep(2)">Next â†’ Verify HRWL</button>
         </div>
 
         <!-- STEP 2: HRWL -->
         <div class="section" id="step2">
             <div class="card">
-                <h2>🎫 Verify HRW Licence</h2>
+                <h2>ðŸŽ« Verify HRW Licence</h2>
                 <div class="info-banner"><strong id="step2-name">Candidate</strong><span>Verify current HRW Licence</span></div>
-                <button class="scan-btn" id="scan-hrwl-btn" onclick="startCamera('hrwl')">📷 Scan HRWL Card</button>
+                <button class="scan-btn" id="scan-hrwl-btn" onclick="startCamera('hrwl')">ðŸ“· Scan HRWL Card</button>
                 <div class="camera-container" id="camera-hrwl">
                     <video id="video-hrwl" autoplay playsinline></video>
                     <canvas id="canvas-hrwl"></canvas>
                     <div class="camera-overlay"></div>
                     <div class="camera-instructions">Position HRWL card within the frame</div>
-                    <button class="capture-btn" onclick="captureAndScan('hrwl')">📸</button>
+                    <button class="capture-btn" onclick="captureAndScan('hrwl')">ðŸ“¸</button>
                 </div>
                 <div id="ocr-status-hrwl" class="ocr-status" style="display:none"></div>
                 <div id="scanned-preview-hrwl" class="scanned-preview" style="display:none"></div>
 
-                <button class="photo-btn" onclick="takePhoto('hrwl')">📸 Take HRWL Photo</button>
+                <button class="photo-btn" onclick="takePhoto('hrwl')">ðŸ“¸ Take HRWL Photo</button>
                 <div class="photo-gallery" id="gallery-hrwl"></div>
                 <div class="photo-count" id="count-hrwl"></div>
 
@@ -201,13 +201,13 @@
                 <div class="checkbox-group"><input type="checkbox" id="chk-hrwl-sighted"><label for="chk-hrwl-sighted">HRWL sighted and valid</label></div>
                 <div class="checkbox-group"><input type="checkbox" id="chk-photo-match"><label for="chk-photo-match">Photo ID matches candidate</label></div>
             </div>
-            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(1)">← Back</button><button class="btn btn-primary" onclick="nextStep(3)">Next →</button></div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(1)">â† Back</button><button class="btn btn-primary" onclick="nextStep(3)">Next â†’</button></div>
         </div>
 
         <!-- STEP 3: Unit -->
         <div class="section" id="step3">
             <div class="card">
-                <h2>📝 Unit & Equipment</h2>
+                <h2>ðŸ“ Unit & Equipment</h2>
                 <div class="info-banner"><strong id="step3-name">Candidate</strong><span id="step3-company"></span></div>
                 <div class="form-group"><label>Select VOC Type *</label>
                     <select id="unit-select" onchange="onUnitChange()">
@@ -262,22 +262,22 @@
                 </div>
                 <div class="form-group"><label>Date</label><input type="date" id="assessment-date"></div>
 
-                <h3>📷 Equipment Photos</h3>
-                <button class="photo-btn" onclick="takePhoto('dataplate')">📸 Take Data Plate Photo</button>
+                <h3>ðŸ“· Equipment Photos</h3>
+                <button class="photo-btn" onclick="takePhoto('dataplate')">ðŸ“¸ Take Data Plate Photo</button>
                 <div class="photo-gallery" id="gallery-dataplate"></div>
                 <div class="photo-count" id="count-dataplate"></div>
 
-                <button class="photo-btn" onclick="takePhoto('equipment')">📸 Take Equipment Photo</button>
+                <button class="photo-btn" onclick="takePhoto('equipment')">ðŸ“¸ Take Equipment Photo</button>
                 <div class="photo-gallery" id="gallery-equipment"></div>
                 <div class="photo-count" id="count-equipment"></div>
             </div>
-            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(2)">← Back</button><button class="btn btn-primary" onclick="nextStep(4)">Next →</button></div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(2)">â† Back</button><button class="btn btn-primary" onclick="nextStep(4)">Next â†’</button></div>
         </div>
 
         <!-- STEP 4: Assessment -->
         <div class="section" id="step4">
             <div class="card">
-                <h2>✅ Assessment</h2>
+                <h2>âœ… Assessment</h2>
                 <div class="info-banner"><strong id="step4-name">Candidate</strong><span id="step4-unit"></span></div>
 
                 <h3>Pre-Assessment Checks</h3>
@@ -291,32 +291,32 @@
             </div>
 
             <div class="card">
-                <h2>📝 Knowledge Questions</h2>
+                <h2>ðŸ“ Knowledge Questions</h2>
                 <div id="knowledge-questions"></div>
             </div>
 
             <div class="card">
-                <h2>📷 Miscellaneous Photos</h2>
-                <button class="photo-btn" onclick="takePhoto('misc')">📸 Take Photo</button>
+                <h2>ðŸ“· Miscellaneous Photos</h2>
+                <button class="photo-btn" onclick="takePhoto('misc')">ðŸ“¸ Take Photo</button>
                 <div class="photo-gallery" id="gallery-misc"></div>
                 <div class="photo-count" id="count-misc"></div>
             </div>
 
             <div class="card">
-                <h2>📊 Outcome</h2>
+                <h2>ðŸ“Š Outcome</h2>
                 <div class="form-group"><label>Comments / Gap Training Required</label><textarea id="assessment-notes" placeholder="Comments or required gap training..."></textarea></div>
                 <div class="outcome-buttons">
-                    <button class="outcome-btn nyc" onclick="setOutcome('NYC')">✗ NOT YET<br>COMPETENT</button>
-                    <button class="outcome-btn competent" onclick="setOutcome('C')">✓ COMPETENT</button>
+                    <button class="outcome-btn nyc" onclick="setOutcome('NYC')">âœ— NOT YET<br>COMPETENT</button>
+                    <button class="outcome-btn competent" onclick="setOutcome('C')">âœ“ COMPETENT</button>
                 </div>
             </div>
-            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(3)">← Back</button></div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(3)">â† Back</button></div>
         </div>
 
         <!-- STEP 5: Signatures -->
         <div class="section" id="step5">
             <div class="card">
-                <h2>✍️ Signatures</h2>
+                <h2>âœï¸ Signatures</h2>
                 <div class="info-banner"><strong id="step5-name">Candidate</strong><span>Outcome: <strong id="step5-outcome">COMPETENT</strong></span></div>
                 <h3>Candidate Declaration</h3>
                 <p style="font-size:.85em;color:#666;margin-bottom:12px">I believe myself to be competent and confident to safely perform the tasks related to this license class.</p>
@@ -328,12 +328,12 @@
                 <div class="signature-container"><canvas id="sig-assessor" class="signature-pad"></canvas></div>
                 <button class="signature-actions" onclick="clearSignature('assessor')">Clear</button>
             </div>
-            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(4)">← Back</button><button class="btn btn-success btn-lg" onclick="saveAndComplete()" style="flex:2">Save & Generate Certificate →</button></div>
+            <div class="nav-buttons"><button class="btn btn-secondary" onclick="prevStep(4)">â† Back</button><button class="btn btn-success btn-lg" onclick="saveAndComplete()" style="flex:2">Save & Generate Certificate â†’</button></div>
         </div>
 
         <!-- STEP 6: Complete -->
         <div class="section" id="step6">
-            <div class="success-banner"><h2>✓ VOC COMPLETE</h2><p id="cert-id"></p></div>
+            <div class="success-banner"><h2>âœ“ VOC COMPLETE</h2><p id="cert-id"></p></div>
             <div id="upload-status" class="upload-status pending">Download PDF and upload to SharePoint</div>
             <div class="card">
                 <p><strong>Candidate:</strong> <span id="final-name"></span></p>
@@ -345,12 +345,12 @@
                 <p><strong>Outcome:</strong> <span id="final-outcome"></span></p>
                 <p><strong>Photos:</strong> <span id="final-photos"></span></p>
             </div>
-            <button class="btn btn-primary btn-block btn-lg" onclick="downloadCertificate()">📄 Download Certificate PDF</button>
-            <button class="btn btn-success btn-block btn-lg" style="margin-top:12px" onclick="openSharePoint()">📁 Open SharePoint Folder</button>
-            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadJSON()">📋 Download Assessment Data (JSON)</button>
-            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadAllPhotos()">📷 Download All Photos</button>
-            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="startNew()">➕ Start New Assessment</button>
-            <div class="ios-tip">💡 <strong>iPad tip:</strong> Downloaded files are in the Files app → Downloads folder, or check Safari downloads (arrow icon).</div>
+            <button class="btn btn-primary btn-block btn-lg" onclick="downloadCertificate()">ðŸ“„ Download Certificate PDF</button>
+            <button class="btn btn-success btn-block btn-lg" style="margin-top:12px" onclick="openSharePoint()">ðŸ“ Open SharePoint Folder</button>
+            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadJSON()">ðŸ“‹ Download Assessment Data (JSON)</button>
+            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadAllPhotos()">ðŸ“· Download All Photos</button>
+            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="startNew()">âž• Start New Assessment</button>
+            <div class="ios-tip">ðŸ’¡ <strong>iPad tip:</strong> Downloaded files are in the Files app â†’ Downloads folder, or check Safari downloads (arrow icon).</div>
         </div>
     </div>
 
@@ -358,19 +358,19 @@
     <div class="fullscreen-camera" id="fullscreen-camera">
         <video id="fullscreen-video" autoplay playsinline></video>
         <div class="controls">
-            <button class="close-btn" onclick="closeFullscreenCamera()">✕</button>
-            <button class="capture-btn" onclick="captureFullscreenPhoto()">📸</button>
+            <button class="close-btn" onclick="closeFullscreenCamera()">âœ•</button>
+            <button class="capture-btn" onclick="captureFullscreenPhoto()">ðŸ“¸</button>
         </div>
     </div>
 
     <!-- Settings Modal -->
     <div class="modal" id="settings-modal">
         <div class="modal-content">
-            <h2>⚙️ Settings</h2>
+            <h2>âš™ï¸ Settings</h2>
             <div class="card" style="background:var(--light)">
                 <h3 style="margin-top:0">SharePoint Location</h3>
                 <p style="font-size:.85em;color:#666">VOC files should be uploaded to:</p>
-                <p style="font-size:.9em;font-weight:600;margin-top:10px">elitelicensing01.sharepoint.com<br>→ Shared Documents<br>→ VOC Records<br>→ [Company Name]</p>
+                <p style="font-size:.9em;font-weight:600;margin-top:10px">elitelicensing01.sharepoint.com<br>â†’ Shared Documents<br>â†’ VOC Records<br>â†’ [Company Name]</p>
             </div>
             <div class="card" style="background:var(--light);margin-top:15px">
                 <h3 style="margin-top:0">Manage Assessors</h3>
@@ -613,7 +613,7 @@ function updatePhotoGallery(type) {
     const photos = capturedPhotos[type];
 
     gallery.innerHTML = photos.map((photo, i) =>
-        '<div class="photo-thumb"><img src="'+photo.data+'" alt="Photo '+(i+1)+'"><button class="delete-photo" onclick="deletePhoto(\''+type+'\','+i+')">✕</button></div>'
+        '<div class="photo-thumb"><img src="'+photo.data+'" alt="Photo '+(i+1)+'"><button class="delete-photo" onclick="deletePhoto(\''+type+'\','+i+')">âœ•</button></div>'
     ).join('');
 
     count.textContent = photos.length > 0 ? photos.length + ' photo' + (photos.length > 1 ? 's' : '') + ' captured' : '';
@@ -679,7 +679,7 @@ async function startCamera(type) {
         video.srcObject = stream;
         activeStreams[type] = stream;
         container.style.display = 'block';
-        btn.textContent = '✕ Close Camera';
+        btn.textContent = 'âœ• Close Camera';
         btn.classList.add('scanning');
     } catch (err) {
         alert('Could not access camera. Please enter details manually.');
@@ -697,7 +697,7 @@ function stopCamera(type) {
     }
     video.srcObject = null;
     container.style.display = 'none';
-    btn.textContent = type === 'id' ? '📷 Scan Driver Licence' : '📷 Scan HRWL Card';
+    btn.textContent = type === 'id' ? 'ðŸ“· Scan Driver Licence' : 'ðŸ“· Scan HRWL Card';
     btn.classList.remove('scanning');
 }
 
@@ -724,7 +724,7 @@ async function captureAndScan(type) {
 
     statusEl.style.display = 'block';
     statusEl.className = 'ocr-status processing';
-    statusEl.textContent = '🔄 Reading text from image...';
+    statusEl.textContent = 'ðŸ”„ Reading text from image...';
 
     try {
         const result = await callVisionAPI(imageData);
@@ -732,16 +732,16 @@ async function captureAndScan(type) {
 
         if (extractedData) {
             statusEl.className = 'ocr-status success';
-            statusEl.textContent = '✓ Text extracted successfully!';
+            statusEl.textContent = 'âœ“ Text extracted successfully!';
             fillFormFromOCR(extractedData, type);
             showScannedPreview(extractedData, type, previewEl);
         } else {
             statusEl.className = 'ocr-status error';
-            statusEl.textContent = '⚠ Could not extract details. Please enter manually.';
+            statusEl.textContent = 'âš  Could not extract details. Please enter manually.';
         }
     } catch (err) {
         statusEl.className = 'ocr-status error';
-        statusEl.textContent = '✕ Scan failed: ' + err.message;
+        statusEl.textContent = 'âœ• Scan failed: ' + err.message;
     }
 }
 
@@ -804,7 +804,7 @@ function fillFormFromOCR(data, type) {
 
 function showScannedPreview(data, type, previewEl) {
     previewEl.style.display = 'block';
-    let html = '<h4>✓ Extracted:</h4>';
+    let html = '<h4>âœ“ Extracted:</h4>';
     if (type === 'id') {
         if (data.name) html += '<p><strong>Name:</strong> '+data.name+'</p>';
         if (data.licenceNumber) html += '<p><strong>Licence:</strong> '+data.licenceNumber+'</p>';
@@ -872,7 +872,7 @@ function showStep(step) {
         for (var key in capturedPhotos) { totalPhotos += capturedPhotos[key].length; }
         document.getElementById('final-photos').textContent = totalPhotos + ' photos captured';
 
-        document.getElementById('upload-status').innerHTML = 'Upload to SharePoint:<br><strong>Shared Documents → VOC Records → '+vocData.employer+'</strong>';
+        document.getElementById('upload-status').innerHTML = 'Upload to SharePoint:<br><strong>Shared Documents â†’ VOC Records â†’ '+vocData.employer+'</strong>';
     }
     window.scrollTo(0, 0);
 }
@@ -1100,24 +1100,19 @@ function downloadCertificate() {
     var doc = generatePDF();
     var filename = 'VOC_' + vocData.unitCode + '_' + vocData.candidateName.replace(/\s/g, '_') + '.pdf';
 
-    // Check if iOS
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    // Detect iPad (including newer iPads that report as MacIntel)
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-    if (isIOS && navigator.share) {
-        // iOS - use Web Share API
-        var blob = doc.output('blob');
-        var file = new File([blob], filename, { type: 'application/pdf' });
-        navigator.share({
-            files: [file],
-            title: 'VOC Certificate'
-        }).catch(function(err) {
-            // Fallback - open in new tab
-            var pdfDataUri = doc.output('datauristring');
-            window.open(pdfDataUri, '_blank');
-            alert('PDF opened in new tab. Use Share button to save.');
-        });
+    if (isIOS) {
+        // iPad/iOS - open PDF directly, user saves via Share button
+        var pdfBlob = doc.output('blob');
+        var pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl, '_blank');
+        setTimeout(function() {
+            alert('PDF opened in new tab.\\n\\nTo SAVE: Tap Share button (box with up arrow) then "Save to Files"');
+        }, 500);
     } else {
-        // Desktop - direct download
         doc.save(filename);
     }
 }
@@ -1276,4 +1271,3 @@ function startNew() {
 </script>
 </body>
 </html>
-
