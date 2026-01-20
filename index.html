@@ -1100,17 +1100,24 @@ function downloadCertificate() {
     var doc = generatePDF();
     var filename = 'VOC_' + vocData.unitCode + '_' + vocData.candidateName.replace(/\s/g, '_') + '.pdf';
 
-    // Try Web Share API for iOS
-    if (navigator.share && navigator.canShare) {
-        doc.output('blob').then(function(blob) {
-            var file = new File([blob], filename, { type: 'application/pdf' });
-            if (navigator.canShare({ files: [file] })) {
-                navigator.share({ files: [file], title: 'VOC Certificate' });
-            } else {
-                doc.save(filename);
-            }
-        }).catch(function() { doc.save(filename); });
+    // Check if iOS
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    if (isIOS && navigator.share) {
+        // iOS - use Web Share API
+        var blob = doc.output('blob');
+        var file = new File([blob], filename, { type: 'application/pdf' });
+        navigator.share({
+            files: [file],
+            title: 'VOC Certificate'
+        }).catch(function(err) {
+            // Fallback - open in new tab
+            var pdfDataUri = doc.output('datauristring');
+            window.open(pdfDataUri, '_blank');
+            alert('PDF opened in new tab. Use Share button to save.');
+        });
     } else {
+        // Desktop - direct download
         doc.save(filename);
     }
 }
@@ -1157,28 +1164,73 @@ function downloadJSON() {
         }
     };
 
-    var blob = new Blob([JSON.stringify(cleanData, null, 2)], {type: 'application/json'});
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'VOC_' + vocData.candidateName.replace(/\s/g,'_') + '_' + vocData.certificateId + '.json';
-    a.click();
+    var jsonStr = JSON.stringify(cleanData, null, 2);
+    var filename = 'VOC_' + vocData.candidateName.replace(/\s/g,'_') + '_' + vocData.certificateId + '.json';
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+    if (isIOS && navigator.share) {
+        var blob = new Blob([jsonStr], {type: 'application/json'});
+        var file = new File([blob], filename, { type: 'application/json' });
+        navigator.share({
+            files: [file],
+            title: 'VOC Assessment Data'
+        }).catch(function() {
+            // Fallback - show data in alert for copy
+            prompt('Copy assessment data:', jsonStr.substring(0, 500) + '...');
+        });
+    } else {
+        var blob = new Blob([jsonStr], {type: 'application/json'});
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+    }
 }
 
 function downloadAllPhotos() {
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    var allFiles = [];
     var totalPhotos = 0;
+
     for (var type in capturedPhotos) {
         capturedPhotos[type].forEach(function(photo, i) {
-            var a = document.createElement('a');
-            a.href = photo.data;
-            a.download = 'VOC_' + vocData.candidateName.replace(/\s/g,'_') + '_' + type + '_' + (i+1) + '.jpg';
-            a.click();
             totalPhotos++;
+            if (isIOS && navigator.share) {
+                // Convert base64 to blob for iOS
+                var byteString = atob(photo.data.split(',')[1]);
+                var mimeType = photo.data.split(',')[0].split(':')[1].split(';')[0];
+                var ab = new ArrayBuffer(byteString.length);
+                var ia = new Uint8Array(ab);
+                for (var j = 0; j < byteString.length; j++) {
+                    ia[j] = byteString.charCodeAt(j);
+                }
+                var blob = new Blob([ab], {type: mimeType});
+                var filename = 'VOC_' + vocData.candidateName.replace(/\s/g,'_') + '_' + type + '_' + (i+1) + '.jpg';
+                allFiles.push(new File([blob], filename, { type: mimeType }));
+            } else {
+                var a = document.createElement('a');
+                a.href = photo.data;
+                a.download = 'VOC_' + vocData.candidateName.replace(/\s/g,'_') + '_' + type + '_' + (i+1) + '.jpg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
         });
     }
 
     if (totalPhotos === 0) {
         alert('No photos to download');
-    } else {
+    } else if (isIOS && navigator.share && allFiles.length > 0) {
+        navigator.share({
+            files: allFiles,
+            title: 'VOC Photos'
+        }).catch(function(err) {
+            alert('Could not share photos: ' + err.message);
+        });
+    } else if (!isIOS) {
         alert(totalPhotos + ' photos downloaded');
     }
 }
