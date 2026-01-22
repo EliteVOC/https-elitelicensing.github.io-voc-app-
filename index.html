@@ -150,6 +150,9 @@
             <div class="card">
                 <h2>Candidate Details</h2>
 
+                <!-- Quick test for camera - remove after testing -->
+                <button class="btn btn-secondary btn-block" style="margin-bottom:10px;font-size:12px" onclick="testCamera()">Test Camera Access</button>
+
                 <!-- Scan Mode Toggle -->
                 <div class="scan-mode-toggle">
                     <button class="active" onclick="setScanMode('photo')">Photo Scan</button>
@@ -170,7 +173,7 @@
 
                 <!-- Camera container -->
                 <div class="camera-container" id="camera-id">
-                    <video id="video-id" autoplay playsinline></video>
+                    <video id="video-id" autoplay playsinline muted webkit-playsinline></video>
                     <canvas id="canvas-id"></canvas>
                     <div class="camera-overlay" id="camera-overlay-id"></div>
                     <div class="camera-instructions" id="camera-instructions-id">Position ID within the frame</div>
@@ -228,7 +231,7 @@
                 </div>
 
                 <div class="camera-container" id="camera-hrwl">
-                    <video id="video-hrwl" autoplay playsinline></video>
+                    <video id="video-hrwl" autoplay playsinline muted webkit-playsinline></video>
                     <canvas id="canvas-hrwl"></canvas>
                     <div class="camera-overlay" id="camera-overlay-hrwl"></div>
                     <div class="camera-instructions" id="camera-instructions-hrwl">Position HRWL card within the frame</div>
@@ -295,7 +298,7 @@
                     </button>
                 </div>
                 <div class="camera-container" id="camera-equipment">
-                    <video id="video-equipment" autoplay playsinline></video>
+                    <video id="video-equipment" autoplay playsinline muted webkit-playsinline></video>
                     <canvas id="canvas-equipment"></canvas>
                     <div class="camera-overlay"></div>
                     <div class="camera-instructions">Capture equipment/machine</div>
@@ -479,7 +482,35 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('assessment-date').valueAsDate = new Date();
     initSignaturePads();
     initQRScanner();
+    console.log('VOC App v2 loaded');
 });
+
+// Test camera function for debugging on iPad
+async function testCamera() {
+    try {
+        alert('Testing camera access...');
+
+        if (!navigator.mediaDevices) {
+            alert('ERROR: navigator.mediaDevices not available.\n\nMake sure you are using Safari and the page is served over HTTPS or from Files app.');
+            return;
+        }
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(d => d.kind === 'videoinput');
+        alert('Found ' + cameras.length + ' camera(s)');
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false
+        });
+
+        alert('SUCCESS! Camera access granted.\n\nYou can now use the scan buttons.');
+        stream.getTracks().forEach(t => t.stop());
+
+    } catch (err) {
+        alert('Camera Error:\n\n' + err.name + ': ' + err.message + '\n\nTips:\n- Use Safari browser\n- Check Settings > Safari > Camera\n- If using Files app, try opening in Safari');
+    }
+}
 
 function initSignaturePads() {
     const c1 = document.getElementById('sig-candidate');
@@ -546,6 +577,12 @@ async function startCamera(type) {
     const container = document.getElementById(containerId);
     const video = document.getElementById(videoId);
 
+    if (!container || !video) {
+        console.error('Camera elements not found:', containerId, videoId);
+        alert('Camera setup error. Please refresh the page.');
+        return;
+    }
+
     // If camera already open, close it
     if (container.style.display === 'block' && activeCamera === type) {
         stopCamera();
@@ -556,14 +593,32 @@ async function startCamera(type) {
     stopCamera();
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        // iOS-compatible camera constraints
+        const constraints = {
             video: {
-                facingMode: 'environment',
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            }
-        });
+                facingMode: { ideal: 'environment' },
+                width: { ideal: 1280, max: 1920 },
+                height: { ideal: 720, max: 1080 }
+            },
+            audio: false
+        };
+
+        // Check if mediaDevices is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Camera not supported on this device/browser. Please use Safari on iPad.');
+            return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
+
+        // iOS requires play() to be called
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('autoplay', 'true');
+        video.muted = true;
+
+        await video.play();
+
         activeStream = stream;
         activeCamera = type;
         container.style.display = 'block';
@@ -579,8 +634,19 @@ async function startCamera(type) {
             startQRScanning(video, type);
         }
 
+        console.log('Camera started successfully for:', type);
+
     } catch (err) {
-        alert('Could not access camera: ' + err.message);
+        console.error('Camera error:', err);
+        if (err.name === 'NotAllowedError') {
+            alert('Camera permission denied. Please allow camera access in Settings > Safari > Camera.');
+        } else if (err.name === 'NotFoundError') {
+            alert('No camera found on this device.');
+        } else if (err.name === 'NotReadableError') {
+            alert('Camera is in use by another app. Please close other apps and try again.');
+        } else {
+            alert('Could not access camera: ' + err.message + '\n\nTry refreshing the page or check camera permissions.');
+        }
     }
 }
 
