@@ -118,16 +118,17 @@
                 <div class="form-group"><label>VOC Type *</label>
                     <select id="voc-type">
                         <option value="">-- Select --</option>
-                        <option value="CN|Non-Slewing Mobile Crane (Franna)">CN - Non-Slewing Crane (Franna)</option>
-                        <option value="C6|Slewing Mobile Crane up to 60t">C6 - Slewing Crane up to 60t</option>
-                        <option value="C2|Slewing Mobile Crane up to 20t">C2 - Slewing Crane up to 20t</option>
-                        <option value="C1|Slewing Mobile Crane up to 10t">C1 - Slewing Crane up to 10t</option>
-                        <option value="WP|Elevating Work Platform">WP - EWP</option>
-                        <option value="LF|Forklift">LF - Forklift</option>
-                        <option value="TLH|Telehandler">Telehandler</option>
-                        <option value="DG|Dogging">DG - Dogging</option>
-                        <option value="RB|Basic Rigging">RB - Basic Rigging</option>
-                        <option value="RI|Intermediate Rigging">RI - Intermediate Rigging</option>
+                        <option value="CN|Licence to Operate a Non-Slewing Mobile Crane (Franna)">CN - Non-Slewing Crane (Franna)</option>
+                        <option value="C6|Licence to Operate a Mobile Slewing Crane up to 60 tonnes">C6 - Slewing Crane up to 60t</option>
+                        <option value="C2|Licence to Operate a Mobile Slewing Crane up to 20 tonnes">C2 - Slewing Crane up to 20t</option>
+                        <option value="C1|Licence to Operate a Mobile Slewing Crane up to 10 tonnes">C1 - Slewing Crane up to 10t</option>
+                        <option value="C0|Licence to Operate a Mobile Slewing Crane (Open)">C0 - Slewing Crane (Open)</option>
+                        <option value="WP|Licence to Operate a Boom-type Elevating Work Platform">WP - EWP (Boom)</option>
+                        <option value="LF|Licence to Operate a Forklift Truck">LF - Forklift</option>
+                        <option value="TLH|Licence to Operate a Telehandler">Telehandler</option>
+                        <option value="DG|Licence to Perform Dogging">DG - Dogging</option>
+                        <option value="RB|Licence to Perform Basic Rigging">RB - Basic Rigging</option>
+                        <option value="RI|Licence to Perform Intermediate Rigging">RI - Intermediate Rigging</option>
                     </select>
                 </div>
                 <div class="form-row">
@@ -440,64 +441,80 @@ var LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASIAAAC6CAIAAACFntd7AA
 function downloadPDF() {
     var jsPDF = window.jspdf.jsPDF;
     var doc = new jsPDF('p', 'mm', 'a4');
-    var pw = 210, ph = 297, m = 15;
+    var pw = 210, ph = 297, m = 20;
 
-    // PAGE 1: Certificate
+    // PAGE 1: Certificate (matching professional format)
     doc.setDrawColor(0);
     doc.setLineWidth(0.5);
     doc.rect(m, m, pw-m*2, ph-m*2);
 
-    var y = 30;
-    doc.setFontSize(20);
+    var y = 35;
+    // Title in 3 lines
+    doc.setFontSize(28);
     doc.setFont('helvetica', 'bold');
-    doc.text('STATEMENT OF VERIFICATION OF COMPETENCY', pw/2, y, {align:'center'});
+    doc.text('STATEMENT OF', pw/2, y, {align:'center'}); y += 12;
+    doc.text('VERIFICATION OF', pw/2, y, {align:'center'}); y += 12;
+    doc.text('COMPETENCY', pw/2, y, {align:'center'});
 
-    y += 8;
-    // Add logo
-    try { doc.addImage(LOGO, 'PNG', pw/2-20, y, 40, 25); y += 30; } catch(e){ y += 5; }
-    doc.setFontSize(8);
+    // Description paragraph
+    y += 15;
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    var desc = 'This statement certifies that the candidate has undertaken theoretical and practical assessments and has been verified as competent to operate the equipment identified below.';
-    doc.text(doc.splitTextToSize(desc, pw-40), pw/2, y, {align:'center'});
+    var desc = 'This Statement of Verification of Competency is issued to the candidate identified below, and states that the candidate has undertaken a verification process, including both theoretical and practical assessments to determine that the candidate is competent to operate the machinery, or undertake the process as identified on this Statement. Any Verification of Competency is made on the basis of the performance of the candidate on the day, and at the time of the assessment, by the Assessor.';
+    var descLines = doc.splitTextToSize(desc, pw-50);
+    doc.text(descLines, pw/2, y, {align:'center'});
 
-    y += 20;
-    doc.setFontSize(10);
-    doc.text('This is to certify that', pw/2, y, {align:'center'});
+    // Logo centered
+    y += descLines.length * 4 + 10;
+    try { doc.addImage(LOGO, 'PNG', pw/2-25, y, 50, 32); y += 40; } catch(e){ y += 10; }
 
-    y += 12;
-    doc.setFontSize(24);
+    // "This is a statement that"
+    doc.setFontSize(12);
+    doc.text('This is a statement that', pw/2, y, {align:'center'});
+
+    // Candidate name in fancy italic
+    y += 15;
+    doc.setFontSize(32);
     doc.setFont('times', 'italic');
     doc.text(data.name, pw/2, y, {align:'center'});
 
-    y += 10;
-    doc.setFontSize(10);
+    // "Has been verified as being competent in"
+    y += 12;
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text('has been verified as competent in', pw/2, y, {align:'center'});
+    doc.text('Has been verified as being competent in', pw/2, y, {align:'center'});
 
-    y += 10;
-    doc.setFontSize(16);
+    // Full course title
+    y += 12;
+    doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text(data.vocTitle, pw/2, y, {align:'center'});
+    var titleLines = doc.splitTextToSize(data.vocTitle, pw-60);
+    doc.text(titleLines, pw/2, y, {align:'center'});
 
-    y += 15;
-    doc.setFontSize(10);
+    // Machine/Model/Date as labeled items
+    y += titleLines.length * 8 + 10;
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    var lx = 55, vx = 95;
-    if (data.make) { doc.text('Machine:', lx, y); doc.text(data.make, vx, y); y += 7; }
-    if (data.model) { doc.text('Model:', lx, y); doc.text(data.model, vx, y); y += 7; }
-    doc.text('Date:', lx, y); doc.text(formatDate(data.date), vx, y);
+    var lx = 60, vx = 110;
+    if (data.make) { doc.text('Machine make:', lx, y); doc.text(data.make, vx, y); y += 8; }
+    if (data.model) { doc.text('Model:', lx, y); doc.text(data.model, vx, y); y += 8; }
+    doc.text('Date of issue:', lx, y); doc.text(formatDate(data.date), vx, y);
 
+    // Authorised Signature
     y += 20;
     doc.text('Authorised Signature:', lx, y);
-    try { doc.addImage(data.sigAssessor, 'PNG', vx, y-8, 40, 15); } catch(e){}
-    y += 10;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Shane McCann - Director', vx, y);
+    try { doc.addImage(data.sigAssessor, 'PNG', vx, y-8, 45, 18); } catch(e){}
+    y += 15;
+    doc.text('Shane McCann-Director', vx, y);
 
     // Footer
     doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Elite Licensing Pty Ltd', m+5, ph-25);
     doc.setFont('helvetica', 'normal');
-    doc.text('Elite Licensing Pty Ltd | P: 0431769828 | E: admin@elitelicensing.com.au | ABN: 89682665390', pw/2, ph-20, {align:'center'});
+    doc.text('P: 0431769828 E: admin@elitelicensing.com.au', m+45, ph-25);
+    doc.text('ABN: 89682665390', m+5, ph-20);
+    doc.text('Elitelicensing.com.au', m+5, ph-15);
 
     // PAGE 2: Assessment Details
     doc.addPage();
