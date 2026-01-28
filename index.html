@@ -348,12 +348,10 @@
                 <p><strong>Outcome:</strong> <span id="final-outcome"></span></p>
                 <p><strong>Photos:</strong> <span id="final-photos"></span></p>
             </div>
-            <button class="btn btn-primary btn-block btn-lg" onclick="downloadCertificate()"> Download Certificate PDF</button>
+            <button class="btn btn-primary btn-block btn-lg" onclick="downloadCertificate()"> Download Complete PDF</button>
             <button class="btn btn-success btn-block btn-lg" style="margin-top:12px" onclick="openSharePoint()"> Open SharePoint Folder</button>
-            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadJSON()"> Download Assessment Data (JSON)</button>
-            <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="downloadAllPhotos()"> Download All Photos</button>
             <button class="btn btn-secondary btn-block" style="margin-top:12px" onclick="startNew()">+ Start New Assessment</button>
-            <div class="ios-tip">TIP: <strong>iPad tip:</strong> Downloaded files are in the Files app &gt; Downloads folder, or check Safari downloads (arrow icon).</div>
+            <div class="ios-tip"><strong>iPad:</strong> PDF opens in new tab. Tap Share (box with arrow) then "Save to Files" to save. PDF includes certificate, assessment details, and all photos.</div>
         </div>
     </div>
 
@@ -836,7 +834,7 @@ async function captureAndScan(type) {
 
     statusEl.style.display = 'block';
     statusEl.className = 'ocr-status processing';
-    statusEl.textContent = '🔄 Reading text from image...';
+    statusEl.textContent = 'ðŸ”„ Reading text from image...';
 
     try {
         const result = await callVisionAPI(imageData);
@@ -849,7 +847,7 @@ async function captureAndScan(type) {
             showScannedPreview(extractedData, type, previewEl);
         } else {
             statusEl.className = 'ocr-status error';
-            statusEl.textContent = '⚠ Could not extract details. Please enter manually.';
+            statusEl.textContent = 'âš  Could not extract details. Please enter manually.';
         }
     } catch (err) {
         statusEl.className = 'ocr-status error';
